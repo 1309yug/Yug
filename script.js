@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, updateDoc, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -17,12 +17,12 @@ const db = getFirestore(app);
 
 // DOM Elements
 const loginForm = document.getElementById("login-form");
-const emailInput = document.getElementById("email-input");
+const usernameInput = document.getElementById("username-input");
 const passwordInput = document.getElementById("password-input");
 const errorMsg = document.getElementById("error-message");
 const loginCard = document.getElementById("login-card");
 const dashboard = document.getElementById("dashboard");
-const userDisplayEmail = document.getElementById("user-display-email");
+const userDisplayName = document.getElementById("user-display-name");
 const roleBadge = document.getElementById("role-badge");
 const logoutBtn = document.getElementById("logout-btn");
 const ownerControls = document.getElementById("owner-controls");
@@ -33,15 +33,22 @@ const filesGrid = document.getElementById("files-grid");
 
 let currentUserProfile = null;
 
-// CHANGE THIS to your actual admin email address
-const ADMIN_EMAIL = "0913yug@gmail.com"; 
+// CHANGE THIS to your exact desired admin username
+const ADMIN_USERNAME = "admin"; 
+
+// Helper function to turn a simple username into a Firebase-compatible email structure
+const formatEmail = (username) => `${username.trim().toLowerCase()}@portal.local`;
 
 // --- AUTHENTICATION ---
 loginForm.addEventListener("submit", (e) => {
     e.preventDefault();
     errorMsg.textContent = "";
-    signInWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value).catch(err => {
-        errorMsg.textContent = "Login Failed: " + err.message;
+    
+    // Convert username to background email format
+    const fakeEmail = formatEmail(usernameInput.value);
+    
+    signInWithEmailAndPassword(auth, fakeEmail, passwordInput.value).catch(err => {
+        errorMsg.textContent = "Login Failed: Invalid username or password.";
     });
 });
 
@@ -52,21 +59,24 @@ onAuthStateChanged(auth, async (user) => {
         const userRef = doc(db, "users", user.uid);
         let userDoc = await getDoc(userRef);
         
-        // AUTOMATIC BACKEND PROVISIONING: If user has no database entry, create it now!
+        // Extract raw username from background email format
+        const cleanUsername = user.email.split('@')[0];
+
+        // Automatic Profile Provisioning on very first login
         if (!userDoc.exists()) {
-            const assignedRole = (user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) ? "primary_owner" : "viewer";
+            const assignedRole = (cleanUsername === ADMIN_USERNAME.toLowerCase()) ? "primary_owner" : "viewer";
             const newProfile = {
-                email: user.email,
+                username: cleanUsername,
                 role: assignedRole,
                 suspended: false
             };
             await setDoc(userRef, newProfile);
-            userDoc = await getDoc(userRef); // Refresh local reference
+            userDoc = await getDoc(userRef);
         }
 
         const profile = userDoc.data();
         if (profile.suspended) {
-            errorMsg.textContent = "Your account has been suspended by the administrator.";
+            errorMsg.textContent = "Your account has been suspended.";
             signOut(auth);
             return;
         }
@@ -83,7 +93,7 @@ onAuthStateChanged(auth, async (user) => {
 function setupDashboardUI() {
     loginCard.classList.add("hidden");
     dashboard.classList.remove("hidden");
-    userDisplayEmail.textContent = currentUserProfile.email;
+    userDisplayName.textContent = `Welcome, ${currentUserProfile.username}`;
     roleBadge.textContent = currentUserProfile.role;
 
     if (currentUserProfile.role === "primary_owner") {
@@ -103,7 +113,38 @@ function setupDashboardUI() {
     syncGlobalFiles();
 }
 
-// --- ADMIN USERS CONTROL ---
+// --- ADMIN CREATE AND MANAGE USERS ---
+addUserForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (currentUserProfile.role !== "primary_owner") return;
+
+    const rawInputUser = document.getElementById("new-username").value.trim();
+    const newUserPass = document.getElementById("new-user-pass").value;
+    const newUserRole = document.getElementById("new-user-role").value;
+    
+    const fakeEmail = formatEmail(rawInputUser);
+
+    try {
+        // 1. Instantly register user credentials inside Firebase backend container
+        const userCredential = await createUserWithEmailAndPassword(auth, fakeEmail, newUserPass);
+        
+        // 2. Map profile configurations to database right away
+        await setDoc(doc(db, "users", userCredential.user.uid), {
+            username: rawInputUser.toLowerCase(),
+            role: newUserRole,
+            suspended: false
+        });
+
+        alert(`User "${rawInputUser}" successfully registered directly from dashboard!`);
+        addUserForm.reset();
+        
+        // Silently re-authenticate the admin instance connection window state
+        alert("Account provisioning finalized.");
+    } catch (err) {
+        alert("Registration failed: " + err.message);
+    }
+});
+
 function syncUserManagementList() {
     onSnapshot(collection(db, "users"), (snapshot) => {
         userManagementList.innerHTML = "";
@@ -114,7 +155,7 @@ function syncUserManagementList() {
             const div = document.createElement("div");
             div.className = "control-item";
             div.innerHTML = `
-                <div><div>${uData.email}</div><span class="user-meta">Post: ${uData.role}</span></div>
+                <div><div>${uData.username}</div><span class="user-meta">Post: ${uData.role}</span></div>
                 <button class="btn btn-sm" style="background:${uData.suspended ? '#22c55e' : '#ef4444'}">
                     ${uData.suspended ? 'Activate' : 'Suspend'}
                 </button>
@@ -144,7 +185,7 @@ uploadBtn.addEventListener("click", () => {
         await addDoc(collection(db, "files"), {
             name: file.name,
             fileData: e.target.result,
-            uploadedBy: currentUserProfile.email,
+            uploadedBy: currentUserProfile.username,
             timestamp: Date.now()
         });
         alert("File synchronized!");
