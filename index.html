@@ -14,7 +14,7 @@
             <p class="subtitle">Sign in to access your synchronized files</p>
             <form id="login-form">
                 <div class="input-group">
-                    <input type="email" id="email-input" placeholder="Email Address" required>
+                    <input type="text" id="username-input" placeholder="Username" required>
                 </div>
                 <div class="input-group">
                     <input type="password" id="password-input" placeholder="Password" required>
@@ -28,7 +28,7 @@
         <div id="dashboard" class="card hidden">
             <div class="dashboard-header">
                 <div>
-                    <h2 id="user-display-email">Storage Dashboard</h2>
+                    <h2 id="user-display-name">Storage Dashboard</h2>
                     <span id="role-badge" class="badge">Role</span>
                 </div>
                 <button id="logout-btn" class="btn btn-secondary">Logout</button>
@@ -41,8 +41,8 @@
                 
                 <!-- Add User Form -->
                 <form id="add-user-form" class="admin-form">
-                    <input type="email" id="new-user-email" placeholder="User Email" required>
-                    <input type="password" id="new-user-pass" placeholder="Initial Password" required>
+                    <input type="text" id="new-username" placeholder="New Username" required>
+                    <input type="password" id="new-user-pass" placeholder="Password" required>
                     <select id="new-user-role">
                         <option value="owner">Co-Owner</option>
                         <option value="viewer" selected>Viewer</option>
@@ -56,15 +56,12 @@
                 </div>
             </div>
 
-            <!-- File Upload Action Block (Visible to Owners Only) -->
+            <!-- File Upload Action Block -->
             <div id="upload-section" class="upload-zone hidden">
-                <h3>Upload New Document</h3>
+                <h3>Upload New Document (Max 1MB)</h3>
                 <div class="upload-controls">
                     <input type="file" id="file-chooser">
                     <button id="upload-btn" class="btn btn-sm">Upload to Cloud</button>
-                </div>
-                <div id="upload-progress" class="progress-bar-container hidden">
-                    <div id="progress-fill" class="progress-fill"></div>
                 </div>
             </div>
 
@@ -72,13 +69,12 @@
             <div class="files-section">
                 <h3>Cloud Synchronized Documents</h3>
                 <div id="files-grid" class="files-grid">
-                    <!-- Script dynamically syncs files from cloud storage here -->
+                    <!-- Script dynamically syncs files from cloud database here -->
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Firebase SDK Scripts (Using Modern ES Modules Framework via CDN) -->
     <script type="module" src="script.js"></script>
 </body>
 </html>
