@@ -39,7 +39,7 @@ const filesGrid = document.getElementById("files-grid");
 let currentUserProfile = null;
 
 // Your master admin username
-const ADMIN_USERNAME = "Yug Patel"; 
+const ADMIN_USERNAME = "Yug"; 
 
 const formatEmail = (username) => `${username.trim().toLowerCase()}@portal.local`;
 
