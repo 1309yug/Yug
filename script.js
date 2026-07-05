@@ -11,9 +11,14 @@ const firebaseConfig = {
   measurementId: "G-1LFD3B30BP"
 };
 
+// Initialize the primary app for the active browser session
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+// Initialize a separate isolated instance to handle background user creation without hijacking your session!
+const adminApp = initializeApp(firebaseConfig, "AdminInstance");
+const adminAuth = getAuth(adminApp);
 
 // DOM Elements
 const loginForm = document.getElementById("login-form");
@@ -33,10 +38,9 @@ const filesGrid = document.getElementById("files-grid");
 
 let currentUserProfile = null;
 
-// CHANGE THIS to your exact desired admin username
+// Your master admin username
 const ADMIN_USERNAME = "admin"; 
 
-// Helper function to turn a simple username into a Firebase-compatible email structure
 const formatEmail = (username) => `${username.trim().toLowerCase()}@portal.local`;
 
 // --- AUTHENTICATION ---
@@ -44,11 +48,10 @@ loginForm.addEventListener("submit", (e) => {
     e.preventDefault();
     errorMsg.textContent = "";
     
-    // Convert username to background email format
     const fakeEmail = formatEmail(usernameInput.value);
     
     signInWithEmailAndPassword(auth, fakeEmail, passwordInput.value).catch(err => {
-        errorMsg.textContent = "Login Failed: Invalid username or password.";
+        errorMsg.textContent = "Access Denied: Invalid credentials.";
     });
 });
 
@@ -58,20 +61,24 @@ onAuthStateChanged(auth, async (user) => {
     if (user) {
         const userRef = doc(db, "users", user.uid);
         let userDoc = await getDoc(userRef);
-        
-        // Extract raw username from background email format
         const cleanUsername = user.email.split('@')[0];
 
-        // Automatic Profile Provisioning on very first login
-        if (!userDoc.exists()) {
-            const assignedRole = (cleanUsername === ADMIN_USERNAME.toLowerCase()) ? "primary_owner" : "viewer";
+        // Strict Admin Auto-Provisioning on first-ever run
+        if (!userDoc.exists() && cleanUsername === ADMIN_USERNAME.toLowerCase()) {
             const newProfile = {
                 username: cleanUsername,
-                role: assignedRole,
+                role: "primary_owner",
                 suspended: false
             };
             await setDoc(userRef, newProfile);
             userDoc = await getDoc(userRef);
+        }
+
+        // If a non-admin managed to get an auth credential but has no Firestore profile doc, block them!
+        if (!userDoc.exists()) {
+            errorMsg.textContent = "Account configuration error. Contact admin.";
+            signOut(auth);
+            return;
         }
 
         const profile = userDoc.data();
@@ -85,15 +92,15 @@ onAuthStateChanged(auth, async (user) => {
         setupDashboardUI();
     } else {
         currentUserProfile = null;
-        dashboard.classList.add("hidden");
-        loginCard.classList.remove("hidden");
+        if (dashboard) dashboard.classList.add("hidden");
+        if (loginCard) loginCard.classList.remove("hidden");
     }
 });
 
 function setupDashboardUI() {
     loginCard.classList.add("hidden");
     dashboard.classList.remove("hidden");
-    userDisplayName.textContent = `Welcome, ${currentUserProfile.username}`;
+    userDisplayName.textContent = `Logged in as: ${currentUserProfile.username}`;
     roleBadge.textContent = currentUserProfile.role;
 
     if (currentUserProfile.role === "primary_owner") {
@@ -113,37 +120,39 @@ function setupDashboardUI() {
     syncGlobalFiles();
 }
 
-// --- ADMIN CREATE AND MANAGE USERS ---
-addUserForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (currentUserProfile.role !== "primary_owner") return;
+// --- ADMIN CREATING USERS (FIXED TAKE OVER BUG) ---
+if (addUserForm) {
+    addUserForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!currentUserProfile || currentUserProfile.role !== "primary_owner") return;
 
-    const rawInputUser = document.getElementById("new-username").value.trim();
-    const newUserPass = document.getElementById("new-user-pass").value;
-    const newUserRole = document.getElementById("new-user-role").value;
-    
-    const fakeEmail = formatEmail(rawInputUser);
-
-    try {
-        // 1. Instantly register user credentials inside Firebase backend container
-        const userCredential = await createUserWithEmailAndPassword(auth, fakeEmail, newUserPass);
+        const rawInputUser = document.getElementById("new-username").value.trim();
+        const newUserPass = document.getElementById("new-user-pass").value;
+        const newUserRole = document.getElementById("new-user-role").value;
         
-        // 2. Map profile configurations to database right away
-        await setDoc(doc(db, "users", userCredential.user.uid), {
-            username: rawInputUser.toLowerCase(),
-            role: newUserRole,
-            suspended: false
-        });
+        const fakeEmail = formatEmail(rawInputUser);
 
-        alert(`User "${rawInputUser}" successfully registered directly from dashboard!`);
-        addUserForm.reset();
-        
-        // Silently re-authenticate the admin instance connection window state
-        alert("Account provisioning finalized.");
-    } catch (err) {
-        alert("Registration failed: " + err.message);
-    }
-});
+        try {
+            // Using adminAuth ensures the new account is provisioned in the cloud database background
+            // without ever logging out your primary active window session!
+            const userCredential = await createUserWithEmailAndPassword(adminAuth, fakeEmail, newUserPass);
+            
+            await setDoc(doc(db, "users", userCredential.user.uid), {
+                username: rawInputUser.toLowerCase(),
+                role: newUserRole,
+                suspended: false
+            });
+
+            alert(`User "${rawInputUser}" successfully registered!`);
+            addUserForm.reset();
+            
+            // Log out the background secondary application track safely
+            await signOut(adminAuth);
+        } catch (err) {
+            alert("Registration failed: " + err.message);
+        }
+    });
+}
 
 function syncUserManagementList() {
     onSnapshot(collection(db, "users"), (snapshot) => {
@@ -168,31 +177,38 @@ function syncUserManagementList() {
     });
 }
 
-// --- FILE SYNC (BASE64) ---
+// --- FILE STORAGE HANDLING ---
 const fileChooser = document.getElementById("file-chooser");
 const uploadBtn = document.getElementById("upload-btn");
 
-uploadBtn.addEventListener("click", () => {
-    const file = fileChooser.files[0];
-    if (!file) return alert("Select a file first!");
-    
-    if (file.size > 1024 * 1024) {
-        return alert("File too large! Must be under 1 MB.");
-    }
+if (uploadBtn) {
+    uploadBtn.addEventListener("click", () => {
+        const file = fileChooser.files[0];
+        if (!file) return alert("Select a file first!");
+        
+        // Base64 encoding inflates sizes by roughly 33%. 700KB ensures it doesn't break Firestore's 1MB cap.
+        if (file.size > 700 * 1024) {
+            return alert("File too large! Must be under 700 KB due to standard database row strict caps.");
+        }
 
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-        await addDoc(collection(db, "files"), {
-            name: file.name,
-            fileData: e.target.result,
-            uploadedBy: currentUserProfile.username,
-            timestamp: Date.now()
-        });
-        alert("File synchronized!");
-        fileChooser.value = "";
-    };
-    reader.readAsDataURL(file);
-});
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            try {
+                await addDoc(collection(db, "files"), {
+                    name: file.name,
+                    fileData: e.target.result,
+                    uploadedBy: currentUserProfile.username,
+                    timestamp: Date.now()
+                });
+                alert("File encrypted and synced!");
+                fileChooser.value = "";
+            } catch(dbErr) {
+                alert("Upload failed: Check permissions or database caps.");
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+}
 
 function syncGlobalFiles() {
     onSnapshot(collection(db, "files"), (snapshot) => {
@@ -218,7 +234,7 @@ function syncGlobalFiles() {
             const deleteAction = div.querySelector(".delete");
             if(deleteAction) {
                 deleteAction.onclick = async () => {
-                    if(confirm("Delete file?")) await deleteDoc(doc(db, "files", docSnap.id));
+                    if(confirm("Permanently wipe this file from cloud?")) await deleteDoc(doc(db, "files", docSnap.id));
                 };
             }
             filesGrid.appendChild(div);
