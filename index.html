@@ -3,80 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Storage Portal</title>
+    <title>Cloud Secure Storage</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <!-- Login Card -->
+        <!-- Auth Card -->
         <div id="login-card" class="card">
-            <h2>Secure Storage Login</h2>
-            <p class="subtitle">Enter your password to access documents</p>
+            <h2>Cloud Storage Portal</h2>
+            <p class="subtitle">Sign in to access your synchronized files</p>
             <form id="login-form">
                 <div class="input-group">
-                    <input type="password" id="password-input" placeholder="Enter Password" required>
+                    <input type="email" id="email-input" placeholder="Email Address" required>
                 </div>
-                <button type="submit" class="btn">Access Portal</button>
+                <div class="input-group">
+                    <input type="password" id="password-input" placeholder="Password" required>
+                </div>
+                <button type="submit" class="btn">Login</button>
                 <p id="error-message" class="error-msg"></p>
             </form>
         </div>
 
-        <!-- Dashboard Panel (Hidden by default) -->
+        <!-- Master Dashboard -->
         <div id="dashboard" class="card hidden">
             <div class="dashboard-header">
                 <div>
-                    <h2>Storage Dashboard</h2>
-                    <p id="role-badge" class="badge">Role</p>
+                    <h2 id="user-display-email">Storage Dashboard</h2>
+                    <span id="role-badge" class="badge">Role</span>
                 </div>
                 <button id="logout-btn" class="btn btn-secondary">Logout</button>
             </div>
 
-            <!-- Owner Controls Section -->
+            <!-- Primary Owner Controls -->
             <div id="owner-controls" class="admin-section hidden">
-                <h3>System Access Control</h3>
-                <p class="section-desc">As the Primary Owner, you can suspend or restore access for other keys.</p>
-                <div class="control-grid">
-                    <div class="control-item">
-                        <span>Owner 2 Access</span>
-                        <button id="toggle-owner2" class="btn btn-sm">Toggle</button>
-                    </div>
-                    <div class="control-item">
-                        <span>Viewer 1 Access</span>
-                        <button id="toggle-viewer1" class="btn btn-sm">Toggle</button>
-                    </div>
-                    <div class="control-item">
-                        <span>Viewer 2 Access</span>
-                        <button id="toggle-viewer2" class="btn btn-sm">Toggle</button>
-                    </div>
+                <h3>User & Role Management</h3>
+                <p class="section-desc">Provision new user accounts, assign posts, or suspend system entry.</p>
+                
+                <!-- Add User Form -->
+                <form id="add-user-form" class="admin-form">
+                    <input type="email" id="new-user-email" placeholder="User Email" required>
+                    <input type="password" id="new-user-pass" placeholder="Initial Password" required>
+                    <select id="new-user-role">
+                        <option value="owner">Co-Owner</option>
+                        <option value="viewer" selected>Viewer</option>
+                    </select>
+                    <button type="submit" class="btn btn-sm">Create User</button>
+                </form>
+                
+                <!-- Dynamic User List Grid -->
+                <div id="user-management-list" class="control-grid">
+                    <!-- Script dynamically injects active users here -->
                 </div>
             </div>
 
-            <!-- Files Grid -->
+            <!-- File Upload Action Block (Visible to Owners Only) -->
+            <div id="upload-section" class="upload-zone hidden">
+                <h3>Upload New Document</h3>
+                <div class="upload-controls">
+                    <input type="file" id="file-chooser">
+                    <button id="upload-btn" class="btn btn-sm">Upload to Cloud</button>
+                </div>
+                <div id="upload-progress" class="progress-bar-container hidden">
+                    <div id="progress-fill" class="progress-fill"></div>
+                </div>
+            </div>
+
+            <!-- Global Synchronized Cloud Files Grid -->
             <div class="files-section">
-                <h3>Your Documents</h3>
-                <div class="files-grid">
-                    <div class="file-card">
-                        <span class="file-icon">📄</span>
-                        <h4>Project_Report.pdf</h4>
-                        <p class="file-size">2.4 MB</p>
-                        <a href="#" class="file-action" onclick="alert('Downloading file...')">Download</a>
-                    </div>
-                    <div class="file-card">
-                        <span class="file-icon">📊</span>
-                        <h4>Financial_Sheet.xlsx</h4>
-                        <p class="file-size">1.1 MB</p>
-                        <a href="#" class="file-action" onclick="alert('Downloading file...')">Download</a>
-                    </div>
-                    <div class="file-card">
-                        <span class="file-icon">🖼️</span>
-                        <h4>Backup_ID.png</h4>
-                        <p class="file-size">850 KB</p>
-                        <a href="#" class="file-action" onclick="alert('Downloading file...')">Download</a>
-                    </div>
+                <h3>Cloud Synchronized Documents</h3>
+                <div id="files-grid" class="files-grid">
+                    <!-- Script dynamically syncs files from cloud storage here -->
                 </div>
             </div>
         </div>
     </div>
-    <script src="script.js"></script>
+
+    <!-- Firebase SDK Scripts (Using Modern ES Modules Framework via CDN) -->
+    <script type="module" src="script.js"></script>
 </body>
 </html>
