@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Storage Portal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Login Card -->
+        <div id="login-card" class="card">
+            <h2>Secure Storage Login</h2>
+            <p class="subtitle">Enter your password to access documents</p>
+            <form id="login-form">
+                <div class="input-group">
+                    <input type="password" id="password-input" placeholder="Enter Password" required>
+                </div>
+                <button type="submit" class="btn">Access Portal</button>
+                <p id="error-message" class="error-msg"></p>
+            </form>
+        </div>
+
+        <!-- Dashboard Panel (Hidden by default) -->
+        <div id="dashboard" class="card hidden">
+            <div class="dashboard-header">
+                <div>
+                    <h2>Storage Dashboard</h2>
+                    <p id="role-badge" class="badge">Role</p>
+                </div>
+                <button id="logout-btn" class="btn btn-secondary">Logout</button>
+            </div>
+
+            <!-- Owner Controls Section -->
+            <div id="owner-controls" class="admin-section hidden">
+                <h3>System Access Control</h3>
+                <p class="section-desc">As the Primary Owner, you can suspend or restore access for other keys.</p>
+                <div class="control-grid">
+                    <div class="control-item">
+                        <span>Owner 2 Access</span>
+                        <button id="toggle-owner2" class="btn btn-sm">Toggle</button>
+                    </div>
+                    <div class="control-item">
+                        <span>Viewer 1 Access</span>
+                        <button id="toggle-viewer1" class="btn btn-sm">Toggle</button>
+                    </div>
+                    <div class="control-item">
+                        <span>Viewer 2 Access</span>
+                        <button id="toggle-viewer2" class="btn btn-sm">Toggle</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Files Grid -->
+            <div class="files-section">
+                <h3>Your Documents</h3>
+                <div class="files-grid">
+                    <div class="file-card">
+                        <span class="file-icon">📄</span>
+                        <h4>Project_Report.pdf</h4>
+                        <p class="file-size">2.4 MB</p>
+                        <a href="#" class="file-action" onclick="alert('Downloading file...')">Download</a>
+                    </div>
+                    <div class="file-card">
+                        <span class="file-icon">📊</span>
+                        <h4>Financial_Sheet.xlsx</h4>
+                        <p class="file-size">1.1 MB</p>
+                        <a href="#" class="file-action" onclick="alert('Downloading file...')">Download</a>
+                    </div>
+                    <div class="file-card">
+                        <span class="file-icon">🖼️</span>
+                        <h4>Backup_ID.png</h4>
+                        <p class="file-size">850 KB</p>
+                        <a href="#" class="file-action" onclick="alert('Downloading file...')">Download</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
