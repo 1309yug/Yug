@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, collection, onSnapshot, updateDoc, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, updateDoc, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBxBCEVsKlqNptzVwRF-J48CVttohJ4Gio",
@@ -33,6 +33,9 @@ const filesGrid = document.getElementById("files-grid");
 
 let currentUserProfile = null;
 
+// CHANGE THIS to your actual admin email address
+const ADMIN_EMAIL = "0913yug@gmail.com"; 
+
 // --- AUTHENTICATION ---
 loginForm.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -46,20 +49,30 @@ logoutBtn.addEventListener("click", () => signOut(auth));
 
 onAuthStateChanged(auth, async (user) => {
     if (user) {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists()) {
-            const profile = userDoc.data();
-            if (profile.suspended) {
-                errorMsg.textContent = "Account suspended.";
-                signOut(auth);
-                return;
-            }
-            currentUserProfile = { uid: user.uid, ...profile };
-            setupDashboardUI();
-        } else {
-            errorMsg.textContent = "No profile found.";
-            signOut(auth);
+        const userRef = doc(db, "users", user.uid);
+        let userDoc = await getDoc(userRef);
+        
+        // AUTOMATIC BACKEND PROVISIONING: If user has no database entry, create it now!
+        if (!userDoc.exists()) {
+            const assignedRole = (user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) ? "primary_owner" : "viewer";
+            const newProfile = {
+                email: user.email,
+                role: assignedRole,
+                suspended: false
+            };
+            await setDoc(userRef, newProfile);
+            userDoc = await getDoc(userRef); // Refresh local reference
         }
+
+        const profile = userDoc.data();
+        if (profile.suspended) {
+            errorMsg.textContent = "Your account has been suspended by the administrator.";
+            signOut(auth);
+            return;
+        }
+
+        currentUserProfile = { uid: user.uid, ...profile };
+        setupDashboardUI();
     } else {
         currentUserProfile = null;
         dashboard.classList.add("hidden");
@@ -90,13 +103,14 @@ function setupDashboardUI() {
     syncGlobalFiles();
 }
 
-// --- ADMIN USERS ---
+// --- ADMIN USERS CONTROL ---
 function syncUserManagementList() {
     onSnapshot(collection(db, "users"), (snapshot) => {
         userManagementList.innerHTML = "";
         snapshot.forEach((docSnap) => {
             const uData = docSnap.data();
             if (uData.role === "primary_owner") return;
+            
             const div = document.createElement("div");
             div.className = "control-item";
             div.innerHTML = `
@@ -113,7 +127,7 @@ function syncUserManagementList() {
     });
 }
 
-// --- FREE FILE SYNC WORKFLOW (BASE64) ---
+// --- FILE SYNC (BASE64) ---
 const fileChooser = document.getElementById("file-chooser");
 const uploadBtn = document.getElementById("upload-btn");
 
@@ -122,21 +136,18 @@ uploadBtn.addEventListener("click", () => {
     if (!file) return alert("Select a file first!");
     
     if (file.size > 1024 * 1024) {
-        return alert("File is too large! In the 100% free plan, files must be under 1 MB.");
+        return alert("File too large! Must be under 1 MB.");
     }
 
     const reader = new FileReader();
     reader.onload = async function(e) {
-        const base64Data = e.target.result; // Raw file converted to text string
-        
         await addDoc(collection(db, "files"), {
             name: file.name,
-            fileData: base64Data, // Save directly to free database
+            fileData: e.target.result,
             uploadedBy: currentUserProfile.email,
             timestamp: Date.now()
         });
-        
-        alert("File synchronized successfully!");
+        alert("File synchronized!");
         fileChooser.value = "";
     };
     reader.readAsDataURL(file);
@@ -166,9 +177,7 @@ function syncGlobalFiles() {
             const deleteAction = div.querySelector(".delete");
             if(deleteAction) {
                 deleteAction.onclick = async () => {
-                    if(confirm("Delete this file?")) {
-                        await deleteDoc(doc(db, "files", docSnap.id));
-                    }
+                    if(confirm("Delete file?")) await deleteDoc(doc(db, "files", docSnap.id));
                 };
             }
             filesGrid.appendChild(div);
