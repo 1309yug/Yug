@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, updateDoc, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -16,7 +16,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Initialize a separate isolated instance to handle background user creation without hijacking your session!
+// Initialize a separate isolated instance to handle background user creation
 const adminApp = initializeApp(firebaseConfig, "AdminInstance");
 const adminAuth = getAuth(adminApp);
 
@@ -39,23 +39,33 @@ const filesGrid = document.getElementById("files-grid");
 let currentUserProfile = null;
 
 // Your master admin username
-const ADMIN_USERNAME = "admin"; 
+const ADMIN_USERNAME = "Yug Patel"; 
 
 const formatEmail = (username) => `${username.trim().toLowerCase()}@portal.local`;
 
-// --- AUTHENTICATION ---
-loginForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    errorMsg.textContent = "";
-    
-    const fakeEmail = formatEmail(usernameInput.value);
-    
-    signInWithEmailAndPassword(auth, fakeEmail, passwordInput.value).catch(err => {
-        errorMsg.textContent = "Access Denied: Invalid credentials.";
+// --- AUTHENTICATION WITH SESSION PERSISTENCE ---
+if (loginForm) {
+    loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        errorMsg.textContent = "Authenticating...";
+        
+        const fakeEmail = formatEmail(usernameInput.value);
+        const password = passwordInput.value;
+        
+        try {
+            // FORCE BROWSER SESSION PERSISTENCE: 
+            // This guarantees your session tokens are wiped completely the split second the browser tab closes.
+            await setPersistence(auth, browserSessionPersistence);
+            await signInWithEmailAndPassword(auth, fakeEmail, password);
+        } catch (err) {
+            errorMsg.textContent = "Access Denied: Invalid credentials.";
+        }
     });
-});
+}
 
-logoutBtn.addEventListener("click", () => signOut(auth));
+if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => signOut(auth));
+}
 
 onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -74,7 +84,7 @@ onAuthStateChanged(auth, async (user) => {
             userDoc = await getDoc(userRef);
         }
 
-        // If a non-admin managed to get an auth credential but has no Firestore profile doc, block them!
+        // If user credentials exist but profile doc is missing, log them out
         if (!userDoc.exists()) {
             errorMsg.textContent = "Account configuration error. Contact admin.";
             signOut(auth);
@@ -94,10 +104,14 @@ onAuthStateChanged(auth, async (user) => {
         currentUserProfile = null;
         if (dashboard) dashboard.classList.add("hidden");
         if (loginCard) loginCard.classList.remove("hidden");
+        if (usernameInput) usernameInput.value = "";
+        if (passwordInput) passwordInput.value = "";
     }
 });
 
 function setupDashboardUI() {
+    if (!currentUserProfile) return;
+    
     loginCard.classList.add("hidden");
     dashboard.classList.remove("hidden");
     userDisplayName.textContent = `Logged in as: ${currentUserProfile.username}`;
@@ -120,7 +134,7 @@ function setupDashboardUI() {
     syncGlobalFiles();
 }
 
-// --- ADMIN CREATING USERS (FIXED TAKE OVER BUG) ---
+// --- ADMIN CREATING USERS ---
 if (addUserForm) {
     addUserForm.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -133,8 +147,6 @@ if (addUserForm) {
         const fakeEmail = formatEmail(rawInputUser);
 
         try {
-            // Using adminAuth ensures the new account is provisioned in the cloud database background
-            // without ever logging out your primary active window session!
             const userCredential = await createUserWithEmailAndPassword(adminAuth, fakeEmail, newUserPass);
             
             await setDoc(doc(db, "users", userCredential.user.uid), {
@@ -146,7 +158,6 @@ if (addUserForm) {
             alert(`User "${rawInputUser}" successfully registered!`);
             addUserForm.reset();
             
-            // Log out the background secondary application track safely
             await signOut(adminAuth);
         } catch (err) {
             alert("Registration failed: " + err.message);
@@ -177,7 +188,7 @@ function syncUserManagementList() {
     });
 }
 
-// --- FILE STORAGE HANDLING ---
+// --- FIXED FILE STORAGE HANDLING (SAVE TO CLOUD OPTION) ---
 const fileChooser = document.getElementById("file-chooser");
 const uploadBtn = document.getElementById("upload-btn");
 
@@ -186,32 +197,48 @@ if (uploadBtn) {
         const file = fileChooser.files[0];
         if (!file) return alert("Select a file first!");
         
-        // Base64 encoding inflates sizes by roughly 33%. 700KB ensures it doesn't break Firestore's 1MB cap.
-        if (file.size > 700 * 1024) {
-            return alert("File too large! Must be under 700 KB due to standard database row strict caps.");
+        // Base64 encoding inflates data sizes by ~33%. 
+        // 650KB ensures the converted text safely stays under Firestore's rigid 1MB document limit.
+        if (file.size > 650 * 1024) {
+            return alert("File too large! Must be under 650 KB to optimize free cloud database rules.");
         }
+
+        uploadBtn.disabled = true;
+        uploadBtn.textContent = "Uploading...";
 
         const reader = new FileReader();
         reader.onload = async function(e) {
             try {
+                // Securely push payload map directly to Firestore 'files' collection
                 await addDoc(collection(db, "files"), {
                     name: file.name,
                     fileData: e.target.result,
                     uploadedBy: currentUserProfile.username,
                     timestamp: Date.now()
                 });
-                alert("File encrypted and synced!");
+                alert("File successfully saved to cloud storage database!");
                 fileChooser.value = "";
             } catch(dbErr) {
-                alert("Upload failed: Check permissions or database caps.");
+                alert("Cloud upload rejected: Verify network or security credentials.");
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = "Upload to Cloud";
             }
         };
+        
+        reader.onerror = function() {
+            alert("Error reading file on device.");
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = "Upload to Cloud";
+        };
+
         reader.readAsDataURL(file);
     });
 }
 
 function syncGlobalFiles() {
     onSnapshot(collection(db, "files"), (snapshot) => {
+        if (!filesGrid) return;
         filesGrid.innerHTML = "";
         snapshot.forEach((docSnap) => {
             const file = docSnap.data();
@@ -227,7 +254,7 @@ function syncGlobalFiles() {
                 <h4 title="${file.name}">${file.name}</h4>
                 <div class="file-actions-row">
                     <a href="${file.fileData}" download="${file.name}" class="file-action">Download</a>
-                    ${(currentUserProfile.role === 'primary_owner' || currentUserProfile.role === 'owner') ? `<span class="file-action delete">Delete</span>` : ''}
+                    ${(currentUserProfile && (currentUserProfile.role === 'primary_owner' || currentUserProfile.role === 'owner')) ? `<span class="file-action delete">Delete</span>` : ''}
                 </div>
             `;
             
