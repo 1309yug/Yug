@@ -10,9 +10,13 @@
     <div class="container">
         <!-- Auth Card -->
         <div id="login-card" class="card">
-            <h2>Cloud Storage Portal</h2>
+            <!-- Dynamic Greeting Header Box -->
+            <div id="greeting-box">
+                <h2 id="greeting-text">Hi, Yug</h2>
+                <div id="login-loader" class="spinner hidden"></div>
+            </div>
             <p class="subtitle">Sign in to access secure documents</p>
-            <!-- Added autocomplete tags to stop the browser from bypassing password entry -->
+            
             <form id="login-form" autocomplete="off">
                 <div class="input-group">
                     <input type="text" id="username-input" placeholder="Username" autocomplete="one-time-code" required>
@@ -40,10 +44,9 @@
                 <h3>User & Role Management</h3>
                 <p class="section-desc">Create secure user accounts, assign posts, or suspend system entry.</p>
                 
-                <!-- Add User Form -->
                 <form id="add-user-form" class="admin-form" autocomplete="off">
                     <input type="text" id="new-username" placeholder="New Username" autocomplete="one-time-code" required>
-                    <input type="password" id="new-user-pass" placeholder="Password" autocomplete="new-password" required>
+                    <input type="password" id="new-user-pass" placeholder="Password" required>
                     <select id="new-user-role">
                         <option value="owner">Co-Owner</option>
                         <option value="viewer" selected>Viewer</option>
@@ -51,16 +54,15 @@
                     <button type="submit" class="btn btn-sm">Create User</button>
                 </form>
                 
-                <!-- Dynamic User List Grid -->
                 <div id="user-management-list" class="control-grid"></div>
             </div>
 
-            <!-- File Upload Action Block -->
+            <!-- Repositioned File Upload Action Block -->
             <div id="upload-section" class="upload-zone hidden">
-                <h3>Upload New Document (Max 650KB)</h3>
-                <div class="upload-controls">
+                <h3>Upload New Document (Max 750KB)</h3>
+                <div class="upload-container-block">
                     <input type="file" id="file-chooser">
-                    <button id="upload-btn" class="btn btn-sm">Upload to Cloud</button>
+                    <button id="upload-btn" class="btn">Upload to Cloud</button>
                 </div>
             </div>
 
