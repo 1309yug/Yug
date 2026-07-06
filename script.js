@@ -6,7 +6,7 @@ import { getFirestore, doc, getDoc, setDoc, addDoc, collection, onSnapshot, quer
 // 1. CONFIGURATION & CORE INITIALIZATION
 // =========================================
 const firebaseConfig = {
-    apiKey: "YOUR_FIREBASE_API_KEY",
+    apiKey: "AIzaSyA-K36hLL8Q8aOl9ETgK24QKP4r6NfYOTM",",
     authDomain: "AIzaSyA-K36hLL8Q8aOl9ETgK24QKP4r6NfYOTM",",
     projectId: "YOUR_FIREBASE_PROJECT_ID",
     storageBucket: "YOUR_FIREBASE_STORAGE_BUCKET",
