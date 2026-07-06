@@ -7,7 +7,7 @@ import { getFirestore, doc, getDoc, setDoc, addDoc, collection, onSnapshot, quer
 // =========================================
 const firebaseConfig = {
     apiKey: "YOUR_FIREBASE_API_KEY",
-    authDomain: "YOUR_FIREBASE_AUTH_DOMAIN",
+    authDomain: "AIzaSyA-K36hLL8Q8aOl9ETgK24QKP4r6NfYOTM",",
     projectId: "YOUR_FIREBASE_PROJECT_ID",
     storageBucket: "YOUR_FIREBASE_STORAGE_BUCKET",
     messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
