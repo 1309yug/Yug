@@ -1,279 +1,329 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, updateDoc, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, addDoc, collection, onSnapshot, query, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// =========================================
+// 1. CONFIGURATION & CORE INITIALIZATION
+// =========================================
 const firebaseConfig = {
-  apiKey: "AIzaSyBxBCEVsKlqNptzVwRF-J48CVttohJ4Gio",
-  authDomain: "portal-12b64.firebaseapp.com",
-  projectId: "portal-12b64",
-  messagingSenderId: "888520414590",
-  appId: "1:888520414590:web:5497213de6c627426b4f2f",
-  measurementId: "G-1LFD3B30BP"
+    apiKey: "YOUR_FIREBASE_API_KEY",
+    authDomain: "YOUR_FIREBASE_AUTH_DOMAIN",
+    projectId: "YOUR_FIREBASE_PROJECT_ID",
+    storageBucket: "YOUR_FIREBASE_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
 };
 
+// Main App instance
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// Isolated Admin Instance for creating users without logging out
 const adminApp = initializeApp(firebaseConfig, "AdminInstance");
 const adminAuth = getAuth(adminApp);
 
-// DOM Elements
-const loginForm = document.getElementById("login-form");
-const usernameInput = document.getElementById("username-input");
-const passwordInput = document.getElementById("password-input");
-const errorMsg = document.getElementById("error-message");
-const loginCard = document.getElementById("login-card");
-const dashboard = document.getElementById("dashboard");
-const userDisplayName = document.getElementById("user-display-name");
-const roleBadge = document.getElementById("role-badge");
-const logoutBtn = document.getElementById("logout-btn");
-const ownerControls = document.getElementById("owner-controls");
-const uploadSection = document.getElementById("upload-section");
-const addUserForm = document.getElementById("add-user-form");
-const userManagementList = document.getElementById("user-management-list");
-const filesGrid = document.getElementById("files-grid");
-
-// New Greeting UI Elements
-const greetingText = document.getElementById("greeting-text");
-const loginLoader = document.getElementById("login-loader");
+// Google Drive Middleware Endpoint
+const GOOGLE_DRIVE_BRIDGE_URL = "https://script.google.com/macros/s/AKfycbziyQgjaHiPKBZ6p3GeOTt4-yvQRyLMIRUMC3B-nR74P1bS0FvMIKSmOVIkuGYZK5Yk/exec";
 
 let currentUserProfile = null;
 
-// Your master admin handle (Handles comparisons strictly via lowercase internally)
-const ADMIN_USERNAME = "admin"; 
+// =========================================
+// 2. DOM ELEMENTS
+// =========================================
+const authScreen = document.getElementById("auth-screen");
+const dashboardScreen = document.getElementById("dashboard-screen");
+const loginForm = document.getElementById("login-form");
+const emailInput = document.getElementById("email-input");
+const passwordInput = document.getElementById("password-input");
+const authError = document.getElementById("auth-error");
 
-const formatEmail = (username) => `${username.trim().toLowerCase()}@portal.local`;
+const greetingText = document.getElementById("greeting-text");
+const greetingSpinner = document.getElementById("greeting-spinner");
+const logoutBtn = document.getElementById("logout-btn");
+const userDisplayName = document.getElementById("user-display-name");
+const userRoleBadge = document.getElementById("user-role-badge");
 
-// --- AUTHENTICATION ---
+const adminSection = document.getElementById("admin-section");
+const createUserForm = document.getElementById("create-user-form");
+const newUsername = document.getElementById("new-username");
+const newEmail = document.getElementById("new-email");
+const newPassword = document.getElementById("new-password");
+const newRole = document.getElementById("new-role");
+const userListContainer = document.getElementById("user-list-container");
+
+const fileChooser = document.getElementById("file-chooser");
+const uploadBtn = document.getElementById("upload-btn");
+const filesGrid = document.getElementById("files-grid");
+
+// =========================================
+// 3. AUTHENTICATION FLOW
+// =========================================
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        showLoginSpinner(true);
+        try {
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            if (userDoc.exists()) {
+                currentUserProfile = userDoc.data();
+                setupDashboardUI();
+                initRealtimeSyncs();
+            } else {
+                handleLogout();
+                alert("Account record missing from system database.");
+            }
+        } catch (err) {
+            alert("Error fetching user session details.");
+        } finally {
+            showLoginSpinner(false);
+        }
+    } else {
+        showAuthScreen();
+    }
+});
+
 if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-        errorMsg.textContent = "";
-        
-        const inputRawUsername = usernameInput.value.trim();
-        const fakeEmail = formatEmail(inputRawUsername);
+        authError.textContent = "";
+        const email = emailInput.value.trim();
         const password = passwordInput.value;
-        
-        // Trigger verification animations instantly
-        if (greetingText) greetingText.textContent = "Welcome";
-        if (loginLoader) loginLoader.classList.remove("hidden");
-        
+
         try {
-            await setPersistence(auth, browserSessionPersistence);
-            await signInWithEmailAndPassword(auth, fakeEmail, password);
+            await signInWithEmailAndPassword(auth, email, password);
         } catch (err) {
-            errorMsg.textContent = "Access Denied: Invalid credentials.";
-            // Reset header state if verification drops out
-            if (greetingText) greetingText.textContent = "Hi, Yug";
-            if (loginLoader) loginLoader.classList.add("hidden");
-            if (usernameInput) usernameInput.value = "";
-            if (passwordInput) passwordInput.value = "";
+            authError.textContent = "Invalid credentials. Please verify your email and password.";
         }
     });
 }
 
 if (logoutBtn) {
-    logoutBtn.addEventListener("click", async () => {
-        await signOut(auth);
-        window.location.reload();
-    });
+    logoutBtn.addEventListener("click", handleLogout);
 }
 
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        const cleanUsername = user.email.split('@')[0];
-        const userRef = doc(db, "users", user.uid);
-        let userDoc = await getDoc(userRef);
+function handleLogout() {
+    signOut(auth).then(() => showAuthScreen());
+}
 
-        // Code-level provisioning rule for the owner
-        if (!userDoc.exists() && cleanUsername === ADMIN_USERNAME.toLowerCase()) {
-            const newProfile = {
-                username: ADMIN_USERNAME, // Saved in standard display case
-                role: "primary_owner",
-                suspended: false
-            };
-            await setDoc(userRef, newProfile);
-            userDoc = await getDoc(userRef);
-        }
+function showAuthScreen() {
+    currentUserProfile = null;
+    dashboardScreen.classList.add("hidden");
+    authScreen.classList.remove("hidden");
+    loginForm.reset();
+}
 
-        if (!userDoc.exists()) {
-            errorMsg.textContent = "Configuration error: Document missing.";
-            if (greetingText) greetingText.textContent = "Hi, Yug";
-            if (loginLoader) loginLoader.classList.add("hidden");
-            await signOut(auth);
-            return;
-        }
-
-        const profile = userDoc.data();
-        if (profile.suspended) {
-            errorMsg.textContent = "Your account has been suspended.";
-            if (greetingText) greetingText.textContent = "Hi, Yug";
-            if (loginLoader) loginLoader.classList.add("hidden");
-            await signOut(auth);
-            return;
-        }
-
-        currentUserProfile = { uid: user.uid, ...profile };
-        setupDashboardUI();
+function showLoginSpinner(show) {
+    if (show) {
+        greetingText.textContent = "Checking profile...";
+        greetingSpinner.classList.remove("hidden");
     } else {
-        currentUserProfile = null;
-        if (dashboard) dashboard.classList.add("hidden");
-        if (loginCard) loginCard.classList.remove("hidden");
-        if (greetingText) greetingText.textContent = "Hi, Yug";
-        if (loginLoader) loginLoader.classList.add("hidden");
+        greetingSpinner.classList.add("hidden");
     }
-});
+}
 
+// =========================================
+// 4. DASHBOARD MANAGEMENT
+// =========================================
 function setupDashboardUI() {
-    if (!currentUserProfile) return;
-    loginCard.classList.add("hidden");
-    dashboard.classList.remove("hidden");
-    
-    // Display username preserving capitalizations if entered by owner
-    userDisplayName.textContent = `Logged in as: ${currentUserProfile.username}`;
-    roleBadge.textContent = currentUserProfile.role;
+    authScreen.classList.add("hidden");
+    dashboardScreen.classList.remove("hidden");
+
+    userDisplayName.textContent = currentUserProfile.username;
+    userRoleBadge.textContent = currentUserProfile.role.replace("_", " ");
 
     if (currentUserProfile.role === "primary_owner") {
-        roleBadge.style.background = "#22c55e";
-        ownerControls.classList.remove("hidden");
-        uploadSection.classList.remove("hidden");
-        syncUserManagementList();
-    } else if (currentUserProfile.role === "owner") {
-        roleBadge.style.background = "#3b82f6";
-        ownerControls.classList.add("hidden");
-        uploadSection.classList.remove("hidden");
+        adminSection.classList.remove("hidden");
     } else {
-        roleBadge.style.background = "#64748b";
-        ownerControls.classList.add("hidden");
-        uploadSection.classList.add("hidden");
+        adminSection.classList.add("hidden");
     }
-    syncGlobalFiles();
 }
 
-// --- WEB-UI USER CREATION ---
-if (addUserForm) {
-    addUserForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        if (!currentUserProfile || currentUserProfile.role !== "primary_owner") return;
-
-        const rawInputUser = document.getElementById("new-username").value.trim();
-        const newUserPass = document.getElementById("new-user-pass").value;
-        const newUserRole = document.getElementById("new-user-role").value;
-        
-        const fakeEmail = formatEmail(rawInputUser);
-
-        try {
-            const userCredential = await createUserWithEmailAndPassword(adminAuth, fakeEmail, newUserPass);
-            
-            // Saves exactly how you typed it (Capitalized or lowercase)
-            await setDoc(doc(db, "users", userCredential.user.uid), {
-                username: rawInputUser, 
-                role: newUserRole,
-                suspended: false
-            });
-
-            alert(`User "${rawInputUser}" successfully registered!`);
-            addUserForm.reset();
-            await signOut(adminAuth);
-        } catch (err) {
-            alert("Registration failed: " + err.message);
+function initRealtimeSyncs() {
+    // Sync Files Grid
+    const filesQuery = query(collection(db, "files"), orderBy("timestamp", "desc"));
+    onSnapshot(filesQuery, (snapshot) => {
+        filesGrid.innerHTML = "";
+        if (snapshot.empty) {
+            filesGrid.innerHTML = `<p class="subtitle" style="grid-column: 1/-1;">No files hosted yet.</p>`;
+            return;
         }
-    });
-}
-
-function syncUserManagementList() {
-    onSnapshot(collection(db, "users"), (snapshot) => {
-        if (!userManagementList) return;
-        userManagementList.innerHTML = "";
         snapshot.forEach((docSnap) => {
-            const uData = docSnap.data();
-            if (uData.role === "primary_owner") return;
-            
-            const div = document.createElement("div");
-            div.className = "control-item";
-            div.innerHTML = `
-                <div><div>${uData.username}</div><span class="user-meta">Post: ${uData.role}</span></div>
-                <button class="btn btn-sm" style="background:${uData.suspended ? '#22c55e' : '#ef4444'}">
-                    ${uData.suspended ? 'Activate' : 'Suspend'}
-                </button>
-            `;
-            div.querySelector("button").onclick = async () => {
-                await updateDoc(doc(db, "users", docSnap.id), { suspended: !uData.suspended });
-            };
-            userManagementList.appendChild(div);
+            renderFileCard(docSnap.id, docSnap.data());
         });
     });
+
+    // Sync User List for Admin Console
+    if (currentUserProfile.role === "primary_owner") {
+        const usersQuery = query(collection(db, "users"), orderBy("username", "asc"));
+        onSnapshot(usersQuery, (snapshot) => {
+            userListContainer.innerHTML = "";
+            snapshot.forEach((docSnap) => {
+                if (docSnap.id !== auth.currentUser.uid) {
+                    renderUserControlRow(docSnap.id, docSnap.data());
+                }
+            });
+        });
+    }
 }
 
-// --- FILE STORAGE HANDLING ---
-const fileChooser = document.getElementById("file-chooser");
-const uploadBtn = document.getElementById("upload-btn");
-
+// =========================================
+// 5. FILE UPLOAD & HYBRID AUTO-ROUTING
+// =========================================
 if (uploadBtn) {
     uploadBtn.addEventListener("click", () => {
         const file = fileChooser.files[0];
-        if (!file) return alert("Select a file first!");
+        if (!file) return alert("Please pick a local file first!");
         
-        // Locked at safe maximum parameter capacity for document limits
-        if (file.size > 750 * 1024) {
-            return alert("File too large! Must be under 750 KB to fit within Firestore document limits.");
+        // Block extreme files that will time out mobile browser memory limits
+        if (file.size > 25 * 1024 * 1024) {
+            return alert("File is too large. Please keep file uploads under 25MB.");
         }
 
         uploadBtn.disabled = true;
-        uploadBtn.textContent = "Uploading to Cloud...";
+        uploadBtn.textContent = "Processing layout...";
 
         const reader = new FileReader();
         reader.onload = async function(e) {
-            try {
-                await addDoc(collection(db, "files"), {
-                    name: file.name,
-                    fileData: e.target.result,
-                    uploadedBy: currentUserProfile.username,
-                    timestamp: Date.now()
-                });
-                alert("File successfully saved to cloud storage database!");
-                fileChooser.value = "";
-            } catch(dbErr) {
-                alert("Cloud upload rejected.");
-            } finally {
-                uploadBtn.disabled = false;
-                uploadBtn.textContent = "Upload to Cloud";
+            const filePayload = {
+                name: file.name,
+                fileData: e.target.result,
+                uploadedBy: currentUserProfile.username,
+                timestamp: Date.now()
+            };
+
+            // AUTO-ROUTE EVALUATOR
+            if (file.size <= 750 * 1024) {
+                // Route A: Internal native Firestore storage (Fast for files under 750KB)
+                uploadBtn.textContent = "Uploading to database...";
+                try {
+                    await addDoc(collection(db, "files"), filePayload);
+                    fileChooser.value = "";
+                } catch(dbErr) {
+                    alert("Database document storage failed.");
+                } finally {
+                    resetUploadButton();
+                }
+            } else {
+                // Route B: Google Drive automation pipeline (Files above 750KB)
+                uploadBtn.textContent = "Routing to Google Drive...";
+                try {
+                    const response = await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
+                        method: "POST",
+                        mode: "cors",
+                        body: JSON.stringify(filePayload)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.status === "success") {
+                        // Create a tiny pointer item in Firestore referencing Google Drive URL
+                        await addDoc(collection(db, "files"), {
+                            name: "[Drive] " + file.name,
+                            fileData: result.downloadUrl, 
+                            uploadedBy: currentUserProfile.username,
+                            timestamp: Date.now(),
+                            isDriveFile: true
+                        });
+                        fileChooser.value = "";
+                    } else {
+                        alert("Google Drive Pipeline error: " + result.message);
+                    }
+                } catch (netErr) {
+                    alert("Network transport error occurred routing payload to Google Drive.");
+                } finally {
+                    resetUploadButton();
+                }
             }
         };
         reader.readAsDataURL(file);
     });
 }
 
-function syncGlobalFiles() {
-    onSnapshot(collection(db, "files"), (snapshot) => {
-        if (!filesGrid) return;
-        filesGrid.innerHTML = "";
-        snapshot.forEach((docSnap) => {
-            const file = docSnap.data();
-            const div = document.createElement("div");
-            div.className = "file-card";
-            
-            let icon = "📄";
-            if(file.name.endsWith('.pdf')) icon = "📕";
-            if(file.name.match(/\.(jpeg|jpg|png|gif)$/i)) icon = "🖼️";
+function resetUploadButton() {
+    uploadBtn.disabled = false;
+    uploadBtn.textContent = "Upload to Cloud";
+}
 
-            div.innerHTML = `
-                <span class="file-icon">${icon}</span>
-                <h4 title="${file.name}">${file.name}</h4>
-                <div class="file-actions-row">
-                    <a href="${file.fileData}" download="${file.name}" class="file-action">Download</a>
-                    ${(currentUserProfile && (currentUserProfile.role === 'primary_owner' || currentUserProfile.role === 'owner')) ? `<span class="file-action delete">Delete</span>` : ''}
-                </div>
-            `;
-            
-            const deleteAction = div.querySelector(".delete");
-            if(deleteAction) {
-                deleteAction.onclick = async () => {
-                    if(confirm("Permanently wipe this file from cloud?")) await deleteDoc(doc(db, "files", docSnap.id));
-                };
+function renderFileCard(id, data) {
+    const fileCard = document.createElement("div");
+    fileCard.className = "file-card";
+
+    // Deduce file icons
+    let icon = "📄";
+    const nameLower = data.name.toLowerCase();
+    if (nameLower.match(/\.(jpg|jpeg|png|gif|webp)$/)) icon = "🖼️";
+    else if (nameLower.match(/\.(mp4|mkv|mov|avi)$/)) icon = "🎬";
+    else if (nameLower.endsWith(".pdf")) icon = "📕";
+
+    fileCard.innerHTML = `
+        <span class="file-icon">${icon}</span>
+        <h4 title="${data.name}">${data.name}</h4>
+        <p class="user-meta" style="margin-bottom: 12px;">By: ${data.uploadedBy}</p>
+        <div class="file-actions-row">
+            <a href="${data.fileData}" download="${data.name}" target="_blank" class="file-action">View</a>
+            ${currentUserProfile.role === 'primary_owner' ? `<button class="file-action delete" data-id="${id}">Delete</button>` : ''}
+        </div>
+    `;
+
+    // Hook delete function cleanly
+    const deleteBtn = fileCard.querySelector(".delete");
+    if (deleteBtn) {
+        deleteBtn.addEventListener("click", async () => {
+            if (confirm(`Permanently remove "${data.name}"?`)) {
+                await deleteDoc(doc(db, "files", id));
             }
-            filesGrid.appendChild(div);
         });
-    });
+    }
+
+    filesGrid.appendChild(fileCard);
+}
+
+// =========================================
+// 6. ADMIN USER MANAGEMENT
+// =========================================
+if (createUserForm) {
+    createUserForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const username = newUsername.value.trim();
+        const email = newEmail.value.trim();
+        const password = newPassword.value;
+        const role = newRole.value;
+
+        try {
+            // Safe provisioning strategy through independent Auth Engine
+            const credential = await createUserWithEmailAndPassword(adminAuth, email, password);
+            
+            await setDoc(doc(db, "users", credential.user.uid), {
+                username: username,
+                email: email,
+                role: role
+            });
+
+            alert(`User account "${username}" provisioned successfully.`);
+            createUserForm.reset();
+            await signOut(adminAuth); // Flush the background admin pointer instantly
+        } catch (err) {
+            alert("Provisioning failed: " + err.message);
         }
+    });
+}
+
+function renderUserControlRow(id, userData) {
+    const row = document.createElement("div");
+    row.className = "control-item";
+    row.innerHTML = `
+        <div>
+            <strong>${userData.username}</strong>
+            <span class="user-meta">${userData.email} | <span class="badge">${userData.role}</span></span>
+        </div>
+        <button class="btn btn-sm btn-secondary delete-user-btn" style="background-color: var(--danger);">Delete</button>
+    `;
+
+    row.querySelector(".delete-user-btn").addEventListener("click", async () => {
+        if (confirm(`Are you completely sure you want to remove access for user account: "${userData.username}"? (Note: Authentication cleanup should be managed directly from your central Firebase Dashboard Console).`)) {
+            await deleteDoc(doc(db, "users", id));
+        }
+    });
+
+    userListContainer.appendChild(row);
+              }
