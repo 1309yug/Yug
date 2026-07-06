@@ -36,7 +36,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Secondary Isolated App Instance for User Management (Prevents Auto-Logout)
+// Secondary Isolated App Instance for Administrative Operations
 const adminApp = initializeApp(firebaseConfig, "AdminInstance");
 const adminAuth = getAuth(adminApp);
 
@@ -81,8 +81,8 @@ const filesGrid = document.getElementById("files-grid");
 // =========================================
 onAuthStateChanged(auth, async (user) => {
     if (user) {
-        greetingSpinner.classList.remove("hidden");
-        greetingText.textContent = "Verifying Identity...";
+        if (greetingSpinner) greetingSpinner.classList.remove("hidden");
+        if (greetingText) greetingText.textContent = "Verifying Identity...";
         
         try {
             const userDoc = await getDoc(doc(db, "users", user.uid));
@@ -90,10 +90,10 @@ onAuthStateChanged(auth, async (user) => {
                 currentUserProfile = userDoc.data();
                 setupDashboardUI();
             } else {
-                forceSignOut("Profile mapping error. Account revoked.");
+                forceSignOut("Profile lookup failed. Database record missing.");
             }
         } catch (err) {
-            forceSignOut("Network sync error. Try again.");
+            forceSignOut("Network sync error. Please try logging in again.");
         }
     } else {
         showLoginView();
@@ -103,7 +103,7 @@ onAuthStateChanged(auth, async (user) => {
 if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-        errorMsg.textContent = "";
+        if (errorMsg) errorMsg.textContent = "";
         
         const email = emailInput.value.trim();
         const password = passwordInput.value;
@@ -111,7 +111,7 @@ if (loginForm) {
         try {
             await signInWithEmailAndPassword(auth, email, password);
         } catch (err) {
-            errorMsg.textContent = "Invalid credentials. Double-check your access parameters.";
+            if (errorMsg) errorMsg.textContent = "Invalid credentials. Double-check your access parameters.";
         }
     });
 }
@@ -127,36 +127,40 @@ function forceSignOut(message) {
     signOut(auth).then(() => {
         currentUserProfile = null;
         showLoginView();
-        if (message) errorMsg.textContent = message;
+        if (message && errorMsg) errorMsg.textContent = message;
     });
 }
 
 function showLoginView() {
-    dashboardScreen.classList.add("hidden");
-    loginScreen.classList.remove("hidden");
-    greetingSpinner.classList.add("hidden");
-    greetingText.textContent = "Cloud Portal System";
-    emailInput.value = "";
-    passwordInput.value = "";
+    if (dashboardScreen) dashboardScreen.classList.add("hidden");
+    if (loginScreen) loginScreen.classList.remove("hidden");
+    if (greetingSpinner) greetingSpinner.classList.add("hidden");
+    if (greetingText) greetingText.textContent = "Cloud Portal System";
+    if (emailInput) emailInput.value = "";
+    if (passwordInput) passwordInput.value = "";
 }
 
 // =========================================
 // 4. DASHBOARD INTERFACE CONTROLLER
 // =========================================
 function setupDashboardUI() {
-    loginScreen.classList.add("hidden");
-    dashboardScreen.classList.remove("hidden");
-    greetingSpinner.classList.add("hidden");
+    if (!currentUserProfile) return; // Prevent breakdown if profile metadata hasn't loaded yet
 
-    userDisplayName.textContent = currentUserProfile.username;
-    userRoleBadge.textContent = currentUserProfile.role.replace("_", " ");
+    if (loginScreen) loginScreen.classList.add("hidden");
+    if (dashboardScreen) dashboardScreen.classList.remove("hidden");
+    if (greetingSpinner) greetingSpinner.classList.add("hidden");
 
-    // Conditional Admin Access Check (UI Isolation Layer)
-    if (currentUserProfile.role === "primary_owner") {
-        adminSection.classList.remove("hidden");
-        syncUsersRealtime();
-    } else {
-        adminSection.classList.add("hidden");
+    if (userDisplayName) userDisplayName.textContent = currentUserProfile.username || "Authorized User";
+    if (userRoleBadge) userRoleBadge.textContent = (currentUserProfile.role || "User").replace("_", " ");
+
+    // Admin UI Isolation Layer
+    if (adminSection) {
+        if (currentUserProfile.role === "primary_owner") {
+            adminSection.classList.remove("hidden");
+            syncUsersRealtime();
+        } else {
+            adminSection.classList.add("hidden");
+        }
     }
 
     syncFilesRealtime();
@@ -170,7 +174,7 @@ if (uploadBtn) {
         const file = fileChooser.files[0];
         if (!file) return alert("Please select a file first.");
 
-        // Maximum upload guard (Prevents browser freeze on extremely huge payloads)
+        // Maximum upload guard to prevent browser lockup
         if (file.size > 20 * 1024 * 1024) {
             return alert("File is too large! Maximum allowed cap via web routing is 20MB.");
         }
@@ -183,7 +187,7 @@ if (uploadBtn) {
             const filePayload = {
                 name: file.name,
                 fileData: e.target.result,
-                uploadedBy: currentUserProfile.username,
+                uploadedBy: currentUserProfile ? currentUserProfile.username : "Anonymous",
                 timestamp: Date.now()
             };
 
@@ -222,7 +226,7 @@ if (uploadBtn) {
                         await addDoc(collection(db, "files"), {
                             name: "[Drive] " + file.name,
                             fileData: result.downloadUrl, 
-                            uploadedBy: currentUserProfile.username,
+                            uploadedBy: currentUserProfile ? currentUserProfile.username : "Anonymous",
                             timestamp: Date.now(),
                             isDriveFile: true
                         });
@@ -231,7 +235,7 @@ if (uploadBtn) {
                         alert("Google Workspace Storage Rejected Payload: " + result.message);
                     }
                 } catch (netErr) {
-                    alert("Network Routing Handoff Error. Check network health.");
+                    alert("Network Routing Handoff Error. Check your connection or Web App status.");
                 } finally {
                     resetUploadState();
                 }
@@ -242,12 +246,15 @@ if (uploadBtn) {
 }
 
 function resetUploadState() {
-    uploadBtn.disabled = false;
-    uploadBtn.textContent = "Upload to Cloud";
+    if (uploadBtn) {
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = "Upload to Cloud";
+    }
 }
 
 function syncFilesRealtime() {
     if (unsubscribeFiles) unsubscribeFiles();
+    if (!filesGrid) return;
 
     unsubscribeFiles = onSnapshot(collection(db, "files"), (snapshot) => {
         filesGrid.innerHTML = "";
@@ -266,6 +273,7 @@ function syncFilesRealtime() {
             
             // Render different visual icons for standard storage vs Google Drive Cloud links
             const icon = data.isDriveFile ? "☁️" : "📄";
+            const isOwner = currentUserProfile && currentUserProfile.role === 'primary_owner';
             
             card.innerHTML = `
                 <span class="file-icon">${icon}</span>
@@ -273,7 +281,7 @@ function syncFilesRealtime() {
                 <p class="user-meta" style="margin-bottom: 12px;">By: ${data.uploadedBy}</p>
                 <div class="file-actions-row">
                     <a href="${data.fileData}" download="${data.name}" target="_blank" class="file-action">Fetch</a>
-                    <button class="file-action delete ${currentUserProfile.role === 'primary_owner' ? '' : 'hidden'}" data-id="${id}">Purge</button>
+                    <button class="file-action delete ${isOwner ? '' : 'hidden'}" data-id="${id}">Purge</button>
                 </div>
             `;
             
@@ -324,6 +332,7 @@ if (createUserForm) {
 
 function syncUsersRealtime() {
     if (unsubscribeUsers) unsubscribeUsers();
+    if (!userListContainer) return;
 
     unsubscribeUsers = onSnapshot(collection(db, "users"), (snapshot) => {
         userListContainer.innerHTML = "";
@@ -334,12 +343,15 @@ function syncUsersRealtime() {
             
             const div = document.createElement("div");
             div.className = "control-item";
+            
+            const isSelfOrOwner = uData.role === 'primary_owner';
+            
             div.innerHTML = `
                 <div>
                     <strong>${uData.username}</strong>
                     <span class="user-meta">${uData.email} — Profile: <span class="badge">${uData.role}</span></span>
                 </div>
-                <button class="file-action delete ${uData.role === 'primary_owner' ? 'hidden' : ''}" data-uid="${uId}">Revoke</button>
+                <button class="file-action delete ${isSelfOrOwner ? 'hidden' : ''}" data-uid="${uId}">Revoke</button>
             `;
             userListContainer.appendChild(div);
         });
@@ -348,7 +360,7 @@ function syncUsersRealtime() {
             btn.addEventListener("click", async (e) => {
                 if (confirm("Revoke all cloud clearance and delete user database record?")) {
                     await deleteDoc(doc(db, "users", e.target.dataset.uid));
-                    alert("User system credentials dropped from database registry. Access blocked on next cycle.");
+                    alert("User system credentials dropped from database registry.");
                 }
             });
         });
