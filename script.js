@@ -34,9 +34,13 @@ const addUserForm = document.getElementById("add-user-form");
 const userManagementList = document.getElementById("user-management-list");
 const filesGrid = document.getElementById("files-grid");
 
+// New Greeting UI Elements
+const greetingText = document.getElementById("greeting-text");
+const loginLoader = document.getElementById("login-loader");
+
 let currentUserProfile = null;
 
-// HARDCODED OWNER IDENTIFIER (Change to your desired username)
+// Your master admin handle (Handles comparisons strictly via lowercase internally)
 const ADMIN_USERNAME = "admin"; 
 
 const formatEmail = (username) => `${username.trim().toLowerCase()}@portal.local`;
@@ -45,18 +49,24 @@ const formatEmail = (username) => `${username.trim().toLowerCase()}@portal.local
 if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-        errorMsg.textContent = "Verifying...";
+        errorMsg.textContent = "";
         
-        const username = usernameInput.value.trim().toLowerCase();
-        const fakeEmail = formatEmail(username);
+        const inputRawUsername = usernameInput.value.trim();
+        const fakeEmail = formatEmail(inputRawUsername);
         const password = passwordInput.value;
         
+        // Trigger verification animations instantly
+        if (greetingText) greetingText.textContent = "Welcome";
+        if (loginLoader) loginLoader.classList.remove("hidden");
+        
         try {
-            // Strictly enforce session tracking so it wipes when the browser tab closes
             await setPersistence(auth, browserSessionPersistence);
             await signInWithEmailAndPassword(auth, fakeEmail, password);
         } catch (err) {
             errorMsg.textContent = "Access Denied: Invalid credentials.";
+            // Reset header state if verification drops out
+            if (greetingText) greetingText.textContent = "Hi, Yug";
+            if (loginLoader) loginLoader.classList.add("hidden");
             if (usernameInput) usernameInput.value = "";
             if (passwordInput) passwordInput.value = "";
         }
@@ -66,7 +76,7 @@ if (loginForm) {
 if (logoutBtn) {
     logoutBtn.addEventListener("click", async () => {
         await signOut(auth);
-        window.location.reload(); // Hard reload on logout to entirely wipe cached memory frames
+        window.location.reload();
     });
 }
 
@@ -79,7 +89,7 @@ onAuthStateChanged(auth, async (user) => {
         // Code-level provisioning rule for the owner
         if (!userDoc.exists() && cleanUsername === ADMIN_USERNAME.toLowerCase()) {
             const newProfile = {
-                username: cleanUsername,
+                username: ADMIN_USERNAME, // Saved in standard display case
                 role: "primary_owner",
                 suspended: false
             };
@@ -89,6 +99,8 @@ onAuthStateChanged(auth, async (user) => {
 
         if (!userDoc.exists()) {
             errorMsg.textContent = "Configuration error: Document missing.";
+            if (greetingText) greetingText.textContent = "Hi, Yug";
+            if (loginLoader) loginLoader.classList.add("hidden");
             await signOut(auth);
             return;
         }
@@ -96,6 +108,8 @@ onAuthStateChanged(auth, async (user) => {
         const profile = userDoc.data();
         if (profile.suspended) {
             errorMsg.textContent = "Your account has been suspended.";
+            if (greetingText) greetingText.textContent = "Hi, Yug";
+            if (loginLoader) loginLoader.classList.add("hidden");
             await signOut(auth);
             return;
         }
@@ -106,6 +120,8 @@ onAuthStateChanged(auth, async (user) => {
         currentUserProfile = null;
         if (dashboard) dashboard.classList.add("hidden");
         if (loginCard) loginCard.classList.remove("hidden");
+        if (greetingText) greetingText.textContent = "Hi, Yug";
+        if (loginLoader) loginLoader.classList.add("hidden");
     }
 });
 
@@ -113,6 +129,8 @@ function setupDashboardUI() {
     if (!currentUserProfile) return;
     loginCard.classList.add("hidden");
     dashboard.classList.remove("hidden");
+    
+    // Display username preserving capitalizations if entered by owner
     userDisplayName.textContent = `Logged in as: ${currentUserProfile.username}`;
     roleBadge.textContent = currentUserProfile.role;
 
@@ -133,7 +151,7 @@ function setupDashboardUI() {
     syncGlobalFiles();
 }
 
-// --- WEB-UI USER CREATION FOR THE OWNER ---
+// --- WEB-UI USER CREATION ---
 if (addUserForm) {
     addUserForm.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -146,11 +164,11 @@ if (addUserForm) {
         const fakeEmail = formatEmail(rawInputUser);
 
         try {
-            // Background initialization keeps your owner panel up and running smoothly
             const userCredential = await createUserWithEmailAndPassword(adminAuth, fakeEmail, newUserPass);
             
+            // Saves exactly how you typed it (Capitalized or lowercase)
             await setDoc(doc(db, "users", userCredential.user.uid), {
-                username: rawInputUser.toLowerCase(),
+                username: rawInputUser, 
                 role: newUserRole,
                 suspended: false
             });
@@ -197,12 +215,13 @@ if (uploadBtn) {
         const file = fileChooser.files[0];
         if (!file) return alert("Select a file first!");
         
-        if (file.size > 650 * 1024) {
-            return alert("File too large! Must be under 650 KB.");
+        // Locked at safe maximum parameter capacity for document limits
+        if (file.size > 750 * 1024) {
+            return alert("File too large! Must be under 750 KB to fit within Firestore document limits.");
         }
 
         uploadBtn.disabled = true;
-        uploadBtn.textContent = "Uploading...";
+        uploadBtn.textContent = "Uploading to Cloud...";
 
         const reader = new FileReader();
         reader.onload = async function(e) {
@@ -257,4 +276,4 @@ function syncGlobalFiles() {
             filesGrid.appendChild(div);
         });
     });
-}
+        }
