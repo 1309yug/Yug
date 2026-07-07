@@ -54,7 +54,7 @@ let unsubscribeUsers = null;
 const loginScreen = document.getElementById("login-screen");
 const dashboardScreen = document.getElementById("dashboard-screen");
 const loginForm = document.getElementById("login-form");
-const emailInput = document.getElementById("email-input");
+const emailInput = document.getElementById("email-input"); // Serves as Username field on UI
 const passwordInput = document.getElementById("password-input");
 const errorMsg = document.getElementById("error-msg");
 
@@ -105,19 +105,25 @@ if (loginForm) {
         e.preventDefault();
         if (errorMsg) errorMsg.textContent = "";
         
-        const email = emailInput.value.trim();
+        let inputField = emailInput.value.trim().toLowerCase();
         const password = passwordInput.value;
+
+        // --- AUTOMATIC USERNAME TO EMAIL CONVERSION ---
+        // Converts shorthand text ("admin") to clean auth profile ("admin@portal.local")
+        if (!inputField.includes("@")) {
+            inputField = `${inputField}@portal.local`;
+        }
 
         // Trigger loading text immediately upon submission
         if (greetingText) greetingText.textContent = "Welcome";
         if (greetingSpinner) greetingSpinner.classList.remove("hidden");
 
         try {
-            await signInWithEmailAndPassword(auth, email, password);
+            await signInWithEmailAndPassword(auth, inputField, password);
         } catch (err) {
             if (greetingText) greetingText.textContent = "Hi, Yug";
             if (greetingSpinner) greetingSpinner.classList.add("hidden");
-            if (errorMsg) errorMsg.textContent = "Invalid credentials. Please verify your email and password.";
+            if (errorMsg) errorMsg.textContent = "Invalid credentials. Please check your username and password.";
         }
     });
 }
@@ -365,4 +371,4 @@ function syncUsersRealtime() {
             });
         });
     });
-                }
+    }
