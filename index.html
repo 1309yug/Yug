@@ -8,65 +8,60 @@
 </head>
 <body>
     <div class="container">
-        <!-- Auth Card -->
-        <div id="login-card" class="card">
-            <!-- Dynamic Greeting Header Box -->
+        <div id="login-screen" class="card">
             <div id="greeting-box">
-                <h2 id="greeting-text">Hi, Yug Patel</h2>
-                <div id="login-loader" class="spinner hidden"></div>
+                <h2 id="greeting-text">Hi, Yug</h2>
+                <div id="greeting-spinner" class="spinner hidden"></div>
             </div>
             <p class="subtitle">Sign in to access secure documents</p>
             
             <form id="login-form" autocomplete="off">
                 <div class="input-group">
-                    <input type="text" id="username-input" placeholder="Username" autocomplete="one-time-code" required>
+                    <input type="text" id="email-input" placeholder="Email Address" autocomplete="email" required>
                 </div>
                 <div class="input-group">
-                    <input type="password" id="password-input" placeholder="Password" autocomplete="new-password" required>
+                    <input type="password" id="password-input" placeholder="Password" autocomplete="current-password" required>
                 </div>
                 <button type="submit" class="btn">Login</button>
-                <p id="error-message" class="error-msg"></p>
+                <p id="error-msg" class="error-msg"></p>
             </form>
         </div>
 
-        <!-- Master Dashboard -->
-        <div id="dashboard" class="card hidden">
+        <div id="dashboard-screen" class="card hidden">
             <div class="dashboard-header">
                 <div>
                     <h2 id="user-display-name">Storage Dashboard</h2>
-                    <span id="role-badge" class="badge">Role</span>
+                    <span id="user-role-badge" class="badge">Role</span>
                 </div>
                 <button id="logout-btn" class="btn btn-secondary">Logout</button>
             </div>
 
-            <!-- Primary Owner Controls -->
-            <div id="owner-controls" class="admin-section hidden">
+            <div id="admin-section" class="admin-section hidden">
                 <h3>User & Role Management</h3>
                 <p class="section-desc">Create secure user accounts, assign posts, or suspend system entry.</p>
                 
-                <form id="add-user-form" class="admin-form" autocomplete="off">
-                    <input type="text" id="new-username" placeholder="New Username" autocomplete="one-time-code" required>
-                    <input type="password" id="new-user-pass" placeholder="Password" required>
-                    <select id="new-user-role">
+                <form id="create-user-form" class="admin-form" autocomplete="off">
+                    <input type="text" id="new-username" placeholder="New Username" required>
+                    <input type="text" id="new-email" placeholder="Email (user@portal.local)" required>
+                    <input type="password" id="new-password" placeholder="Password" required>
+                    <select id="new-role">
                         <option value="owner">Co-Owner</option>
                         <option value="viewer" selected>Viewer</option>
                     </select>
                     <button type="submit" class="btn btn-sm">Create User</button>
                 </form>
                 
-                <div id="user-management-list" class="control-grid"></div>
+                <div id="user-list-container" class="control-grid"></div>
             </div>
 
-            <!-- Repositioned File Upload Action Block -->
-            <div id="upload-section" class="upload-zone hidden">
-                <h3>Upload New Document (Max 750KB)</h3>
+            <div id="upload-section" class="upload-zone">
+                <h3>Upload New Document (Max 20MB Auto-Drive Switch)</h3>
                 <div class="upload-container-block">
                     <input type="file" id="file-chooser">
                     <button id="upload-btn" class="btn">Upload to Cloud</button>
                 </div>
             </div>
 
-            <!-- Global Synchronized Cloud Files Grid -->
             <div class="files-section">
                 <h3>Cloud Synchronized Documents</h3>
                 <div id="files-grid" class="files-grid"></div>
