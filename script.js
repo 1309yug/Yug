@@ -7,13 +7,29 @@ const GOOGLE_DRIVE_BRIDGE_URL = "https://script.google.com/macros/s/AKfycbztcC21
 let currentUserProfile = null;
 let simulatedFilesDB = []; 
 
+// Apply global CSS rules programmatically to prevent accidental text selections across the web portal
+const styleBlock = document.createElement("style");
+styleBlock.textContent = `
+  body, html, .card, .control-item, .file-card, h2, h3, h4, p, span {
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none;     /* IE 10 and Info-mesh */
+    user-select: none;         /* Standard layout engines */
+  }
+  input, textarea, select {
+    -webkit-user-select: text;
+    -ms-user-select: text;
+    user-select: text;         /* Keep input fields functional */
+  }
+`;
+document.head.appendChild(styleBlock);
+
 // =========================================
 // 2. DOM ELEMENT SELECTORS
 // =========================================
 const loginScreen = document.getElementById("login-screen");
 const dashboardScreen = document.getElementById("dashboard-screen");
 const loginForm = document.getElementById("login-form");
-const emailInput = document.getElementById("email-input"); // Handled as Username box on the UI
+const emailInput = document.getElementById("email-input"); 
 const passwordInput = document.getElementById("password-input");
 const errorMsg = document.getElementById("error-msg");
 
@@ -27,7 +43,7 @@ const userRoleBadge = document.getElementById("user-role-badge");
 const adminSection = document.getElementById("admin-section");
 const createUserForm = document.getElementById("create-user-form");
 const newUsername = document.getElementById("new-username");
-const newEmail = document.getElementById("new-email"); // Re-mapped as Password field in your HTML UI structure
+const newEmail = document.getElementById("new-email"); 
 const newRole = document.getElementById("new-role");
 const userListContainer = document.getElementById("user-list-container");
 
@@ -50,7 +66,6 @@ if (loginForm) {
         if (greetingSpinner) greetingSpinner.classList.remove("hidden");
 
         try {
-            // Ping your updated Apps Script engine directly 
             const response = await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
                 method: "POST",
                 body: JSON.stringify({ 
@@ -99,7 +114,6 @@ function setupDashboardUI() {
     if (userDisplayName) userDisplayName.textContent = currentUserProfile.username;
     if (userRoleBadge) userRoleBadge.textContent = currentUserProfile.role.toUpperCase().replace("_", " ");
     
-    // Check if logged-in user is primary_owner to unlock web-based user controls
     if (adminSection) {
         if (currentUserProfile.role === "primary_owner") {
             adminSection.classList.remove("hidden");
@@ -135,6 +149,14 @@ async function syncUsersLive() {
                 const isOwner = user.role === "primary_owner";
                 const isSuspended = user.status === "suspended";
                 
+                // Determine dynamic color setups for varying roles
+                let badgeStyle = "background:#7f8c8d; color:white;"; // Viewer / default grey
+                if (user.role === "primary_owner") {
+                    badgeStyle = "background:#2c3e50; color:white; font-weight:bold;"; // Slate Blue
+                } else if (user.role === "owner") {
+                    badgeStyle = "background:#16a085; color:white;"; // Teal
+                }
+
                 let actionBtnHTML = "";
                 if (!isOwner) {
                     actionBtnHTML = isSuspended 
@@ -147,7 +169,7 @@ async function syncUsersLive() {
                 div.innerHTML = `
                     <div>
                         <strong>${user.username}</strong> 
-                        <span style="font-size:11px; margin-left:8px; padding:2px 6px; background:#eee; border-radius:4px;">${user.role.toUpperCase()}</span>
+                        <span style="font-size:11px; margin-left:8px; padding:3px 8px; border-radius:4px; ${badgeStyle}">${user.role.toUpperCase()}</span>
                         <span style="font-size:12px; margin-left:5px; color:${isSuspended ? '#ff4d4d':'#2ecc71'}; font-weight:bold;">(${user.status})</span>
                     </div>
                     <div>${actionBtnHTML}</div>
@@ -155,7 +177,6 @@ async function syncUsersLive() {
                 userListContainer.appendChild(div);
             });
 
-            // Bind live activation and suspension event triggers
             document.querySelectorAll(".status-toggle-btn").forEach(btn => {
                 btn.addEventListener("click", async (e) => {
                     const targetUser = e.target.dataset.user;
@@ -187,13 +208,12 @@ async function syncUsersLive() {
     }
 }
 
-// Handler for provisioning new accounts directly to Google Sheet
 if (createUserForm) {
     createUserForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         
         const username = newUsername.value.trim();
-        const password = newEmail.value || "12345"; // Maps seamlessly into your UI's input fields
+        const password = newEmail.value || "12345"; 
         const role = newRole.value;
 
         const submitBtn = createUserForm.querySelector("button[type='submit']");
@@ -229,7 +249,7 @@ if (createUserForm) {
 }
 
 // =========================================
-// 5. DIRECT GOOGLE DRIVE FILE STREAMER
+// 5. DIRECT GOOGLE DRIVE FILE STREAMER & REMOVAL
 // =========================================
 if (uploadBtn) {
     uploadBtn.addEventListener("click", () => {
@@ -254,6 +274,7 @@ if (uploadBtn) {
 
                 if (result.status === "success") {
                     simulatedFilesDB.push({ 
+                        id: "file_" + Date.now(), // Generate unique local tag tracking pointers
                         name: file.name, 
                         url: result.downloadUrl, 
                         by: currentUserProfile.username 
@@ -291,10 +312,22 @@ function renderFiles() {
             <span class="file-icon">☁️</span>
             <h4>${file.name}</h4>
             <p class="user-meta">By: ${file.by}</p>
-            <div class="file-actions-row">
-                <a href="${file.url}" target="_blank" class="file-action">Fetch</a>
+            <div class="file-actions-row" style="display:flex; gap:8px;">
+                <a href="${file.url}" target="_blank" class="file-action" style="flex:1; text-align:center;">Fetch</a>
+                <button class="file-action delete-file-btn" data-id="${file.id}" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:6px 12px; cursor:pointer;">Purge</button>
             </div>
         `;
         filesGrid.appendChild(card);
+    });
+
+    // Handle interactive deletion triggers
+    document.querySelectorAll(".delete-file-btn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            const fileId = e.target.dataset.id;
+            if (confirm("Remove this document visualization from your synced interface dashboard grid?")) {
+                simulatedFilesDB = simulatedFilesDB.filter(item => item.id !== fileId);
+                renderFiles();
+            }
+        });
     });
 }
