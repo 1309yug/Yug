@@ -82,7 +82,7 @@ const filesGrid = document.getElementById("files-grid");
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         if (greetingSpinner) greetingSpinner.classList.remove("hidden");
-        if (greetingText) greetingText.textContent = "Verifying Identity...";
+        if (greetingText) greetingText.textContent = "Welcome";
         
         try {
             const userDoc = await getDoc(doc(db, "users", user.uid));
@@ -90,7 +90,7 @@ onAuthStateChanged(auth, async (user) => {
                 currentUserProfile = userDoc.data();
                 setupDashboardUI();
             } else {
-                forceSignOut("Profile lookup failed. Database record missing.");
+                forceSignOut("Configuration error: Firestore document missing.");
             }
         } catch (err) {
             forceSignOut("Network sync error. Please try logging in again.");
@@ -108,10 +108,16 @@ if (loginForm) {
         const email = emailInput.value.trim();
         const password = passwordInput.value;
 
+        // Trigger loading text immediately upon submission
+        if (greetingText) greetingText.textContent = "Welcome";
+        if (greetingSpinner) greetingSpinner.classList.remove("hidden");
+
         try {
             await signInWithEmailAndPassword(auth, email, password);
         } catch (err) {
-            if (errorMsg) errorMsg.textContent = "Invalid credentials. Double-check your access parameters.";
+            if (greetingText) greetingText.textContent = "Hi, Yug";
+            if (greetingSpinner) greetingSpinner.classList.add("hidden");
+            if (errorMsg) errorMsg.textContent = "Invalid credentials. Please verify your email and password.";
         }
     });
 }
@@ -135,7 +141,7 @@ function showLoginView() {
     if (dashboardScreen) dashboardScreen.classList.add("hidden");
     if (loginScreen) loginScreen.classList.remove("hidden");
     if (greetingSpinner) greetingSpinner.classList.add("hidden");
-    if (greetingText) greetingText.textContent = "Cloud Portal System";
+    if (greetingText) greetingText.textContent = "Hi, Yug";
     if (emailInput) emailInput.value = "";
     if (passwordInput) passwordInput.value = "";
 }
@@ -144,7 +150,7 @@ function showLoginView() {
 // 4. DASHBOARD INTERFACE CONTROLLER
 // =========================================
 function setupDashboardUI() {
-    if (!currentUserProfile) return; // Prevent breakdown if profile metadata hasn't loaded yet
+    if (!currentUserProfile) return; 
 
     if (loginScreen) loginScreen.classList.add("hidden");
     if (dashboardScreen) dashboardScreen.classList.remove("hidden");
@@ -153,7 +159,7 @@ function setupDashboardUI() {
     if (userDisplayName) userDisplayName.textContent = currentUserProfile.username || "Authorized User";
     if (userRoleBadge) userRoleBadge.textContent = (currentUserProfile.role || "User").replace("_", " ");
 
-    // Admin UI Isolation Layer
+    // Admin Panel Isolation Layer
     if (adminSection) {
         if (currentUserProfile.role === "primary_owner") {
             adminSection.classList.remove("hidden");
@@ -174,7 +180,6 @@ if (uploadBtn) {
         const file = fileChooser.files[0];
         if (!file) return alert("Please select a file first.");
 
-        // Maximum upload guard to prevent browser lockup
         if (file.size > 20 * 1024 * 1024) {
             return alert("File is too large! Maximum allowed cap via web routing is 20MB.");
         }
@@ -193,7 +198,6 @@ if (uploadBtn) {
 
             // AUTO ROUTER LOGIC SWITCH
             if (file.size <= 750 * 1024) {
-                // Route A: Small files fit natively inside standard Firestore collection rows
                 uploadBtn.textContent = "Storing in Database...";
                 try {
                     await addDoc(collection(db, "files"), {
@@ -204,13 +208,13 @@ if (uploadBtn) {
                         isDriveFile: false
                     });
                     fileChooser.value = "";
+                    alert("Saved directly to cloud database!");
                 } catch (err) {
-                    alert("Firestore Write Exception: File exceeded document block constraints.");
+                    alert("Database write error.");
                 } finally {
                     resetUploadState();
                 }
             } else {
-                // Route B: File is heavy. Safe-route directly out to Google Drive Storage Bridge
                 uploadBtn.textContent = "Forwarding to Google Drive...";
                 try {
                     const response = await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
@@ -222,7 +226,6 @@ if (uploadBtn) {
                     const result = await response.json();
 
                     if (result.status === "success") {
-                        // Store a tiny document reference pointing to the secure Google Drive download stream
                         await addDoc(collection(db, "files"), {
                             name: "[Drive] " + file.name,
                             fileData: result.downloadUrl, 
@@ -231,11 +234,12 @@ if (uploadBtn) {
                             isDriveFile: true
                         });
                         fileChooser.value = "";
+                        alert("Large file successfully routed to Google Drive!");
                     } else {
-                        alert("Google Workspace Storage Rejected Payload: " + result.message);
+                        alert("Drive storage error: " + result.message);
                     }
                 } catch (netErr) {
-                    alert("Network Routing Handoff Error. Check your connection or Web App status.");
+                    alert("Routing handoff error. Check connection profile.");
                 } finally {
                     resetUploadState();
                 }
@@ -271,7 +275,6 @@ function syncFilesRealtime() {
             const card = document.createElement("div");
             card.className = "file-card";
             
-            // Render different visual icons for standard storage vs Google Drive Cloud links
             const icon = data.isDriveFile ? "☁️" : "📄";
             const isOwner = currentUserProfile && currentUserProfile.role === 'primary_owner';
             
@@ -288,10 +291,9 @@ function syncFilesRealtime() {
             filesGrid.appendChild(card);
         });
 
-        // Add Delete Listeners for Primary Owners
         document.querySelectorAll(".file-action.delete").forEach(btn => {
             btn.addEventListener("click", async (e) => {
-                if(confirm("Confirm structural deletion of this database file resource?")) {
+                if(confirm("Permanently delete this file?")) {
                     await deleteDoc(doc(db, "files", e.target.dataset.id));
                 }
             });
@@ -312,7 +314,6 @@ if (createUserForm) {
         const role = newRole.value;
 
         try {
-            // Execute user registration using isolated administrative auth instance
             const credential = await createUserWithEmailAndPassword(adminAuth, email, password);
             
             await setDoc(doc(db, "users", credential.user.uid), {
@@ -323,9 +324,9 @@ if (createUserForm) {
             });
 
             createUserForm.reset();
-            alert(`Profile structure securely provisioned for ${username}!`);
+            alert(`Profile registered for ${username}!`);
         } catch (err) {
-            alert("Administrative Provisioning Failed: " + err.message);
+            alert("Registration failed: " + err.message);
         }
     });
 }
@@ -349,7 +350,7 @@ function syncUsersRealtime() {
             div.innerHTML = `
                 <div>
                     <strong>${uData.username}</strong>
-                    <span class="user-meta">${uData.email} — Profile: <span class="badge">${uData.role}</span></span>
+                    <span class="user-meta">${uData.email} — Role: <span class="badge">${uData.role}</span></span>
                 </div>
                 <button class="file-action delete ${isSelfOrOwner ? 'hidden' : ''}" data-uid="${uId}">Revoke</button>
             `;
@@ -358,11 +359,10 @@ function syncUsersRealtime() {
 
         document.querySelectorAll("[data-uid]").forEach(btn => {
             btn.addEventListener("click", async (e) => {
-                if (confirm("Revoke all cloud clearance and delete user database record?")) {
+                if (confirm("Revoke clearance and delete user account record?")) {
                     await deleteDoc(doc(db, "users", e.target.dataset.uid));
-                    alert("User system credentials dropped from database registry.");
                 }
             });
         });
     });
-}
+                }
