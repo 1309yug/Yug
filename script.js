@@ -1,7 +1,7 @@
 // =========================================
 // 1. CONFIGURATION (INTEGRATED LIVE URL)
 // =========================================
-const GOOGLE_DRIVE_BRIDGE_URL = "https://script.google.com/macros/s/AKfycbyvIwY8rpVTlMdgz8JgAxTyfI0uLjmUJ0pSQUg-S1pF1Y08R5jQhLH84KuqT19jdhmT/exec";
+const GOOGLE_DRIVE_BRIDGE_URL = "https://script.google.com/macros/s/AKfycbztcC213f8GE4SZV6d7bUXdS7sUNLH34xPw9TYKzCmNmBqiLlKY1Iao9c-1aOPdWnar/exec";
 
 // Global Session States
 let currentUserProfile = null;
@@ -46,7 +46,7 @@ if (loginForm) {
         const username = emailInput.value.trim();
         const password = passwordInput.value;
 
-        if (greetingText) greetingText.textContent = "Welcome...";
+        if (greetingText) greetingText.textContent = "Verifying...";
         if (greetingSpinner) greetingSpinner.classList.remove("hidden");
 
         try {
@@ -297,4 +297,4 @@ function renderFiles() {
         `;
         filesGrid.appendChild(card);
     });
-}
+                    }
