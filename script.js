@@ -54,7 +54,7 @@ let unsubscribeUsers = null;
 const loginScreen = document.getElementById("login-screen");
 const dashboardScreen = document.getElementById("dashboard-screen");
 const loginForm = document.getElementById("login-form");
-const emailInput = document.getElementById("email-input"); // Serves as Username field on UI
+const emailInput = document.getElementById("email-input"); 
 const passwordInput = document.getElementById("password-input");
 const errorMsg = document.getElementById("error-msg");
 
@@ -85,15 +85,28 @@ onAuthStateChanged(auth, async (user) => {
         if (greetingText) greetingText.textContent = "Welcome";
         
         try {
-            const userDoc = await getDoc(doc(db, "users", user.uid));
-            if (userDoc.exists()) {
-                currentUserProfile = userDoc.data();
-                setupDashboardUI();
-            } else {
-                forceSignOut("Configuration error: Firestore document missing.");
+            const userRef = doc(db, "users", user.uid);
+            let userDoc = await getDoc(userRef);
+            
+            // BULLETPROOF FALLBACK RULE: If you created a login via console 
+            // but forgot the database doc, this block auto-generates it for you.
+            if (!userDoc.exists()) {
+                const cleanName = user.email.split('@')[0];
+                const autoProfile = {
+                    username: cleanName.toUpperCase(),
+                    email: user.email,
+                    role: cleanName.toLowerCase() === "admin" ? "primary_owner" : "viewer",
+                    createdAt: Date.now()
+                };
+                await setDoc(userRef, autoProfile);
+                userDoc = await getDoc(userRef);
             }
+
+            currentUserProfile = userDoc.data();
+            setupDashboardUI();
         } catch (err) {
-            forceSignOut("Network sync error. Please try logging in again.");
+            console.error(err);
+            forceSignOut("Database sync error. Reload your application tab.");
         }
     } else {
         showLoginView();
@@ -105,16 +118,15 @@ if (loginForm) {
         e.preventDefault();
         if (errorMsg) errorMsg.textContent = "";
         
-        let inputField = emailInput.value.trim().toLowerCase();
+        let inputField = emailInput.value.trim();
         const password = passwordInput.value;
 
-        // --- AUTOMATIC USERNAME TO EMAIL CONVERSION ---
-        // Converts shorthand text ("admin") to clean auth profile ("admin@portal.local")
+        // --- AUTOMATIC USERNAME TO EMAIL SANITIZATION ---
         if (!inputField.includes("@")) {
-            inputField = `${inputField}@portal.local`;
+            inputField = `${inputField.toLowerCase()}@portal.local`;
         }
 
-        // Trigger loading text immediately upon submission
+        // Trigger UI modifications instantly
         if (greetingText) greetingText.textContent = "Welcome";
         if (greetingSpinner) greetingSpinner.classList.remove("hidden");
 
@@ -123,7 +135,7 @@ if (loginForm) {
         } catch (err) {
             if (greetingText) greetingText.textContent = "Hi, Yug";
             if (greetingSpinner) greetingSpinner.classList.add("hidden");
-            if (errorMsg) errorMsg.textContent = "Invalid credentials. Please check your username and password.";
+            if (errorMsg) errorMsg.textContent = "Login Refused. Verify your account parameters.";
         }
     });
 }
@@ -162,7 +174,7 @@ function setupDashboardUI() {
     if (dashboardScreen) dashboardScreen.classList.remove("hidden");
     if (greetingSpinner) greetingSpinner.classList.add("hidden");
 
-    if (userDisplayName) userDisplayName.textContent = currentUserProfile.username || "Authorized User";
+    if (userDisplayName) userDisplayName.textContent = currentUserProfile.username;
     if (userRoleBadge) userRoleBadge.textContent = (currentUserProfile.role || "User").replace("_", " ");
 
     // Admin Panel Isolation Layer
@@ -202,8 +214,8 @@ if (uploadBtn) {
                 timestamp: Date.now()
             };
 
-            // AUTO ROUTER LOGIC SWITCH
             if (file.size <= 750 * 1024) {
+                // Route A: Small files fit inside standard Firestore row blocks
                 uploadBtn.textContent = "Storing in Database...";
                 try {
                     await addDoc(collection(db, "files"), {
@@ -221,6 +233,7 @@ if (uploadBtn) {
                     resetUploadState();
                 }
             } else {
+                // Route B: Heavy file automatically routed directly out to Google Drive Storage Bridge
                 uploadBtn.textContent = "Forwarding to Google Drive...";
                 try {
                     const response = await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
@@ -314,8 +327,8 @@ if (createUserForm) {
     createUserForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         
-        const username = newUsername.value.trim();
-        const email = newEmail.value.trim();
+        const username = newUsername.value.trim().toUpperCase(); // Forced capitalization standard
+        const email = newEmail.value.trim().toLowerCase();
         const password = newPassword.value;
         const role = newRole.value;
 
@@ -371,4 +384,4 @@ function syncUsersRealtime() {
             });
         });
     });
-    }
+}
