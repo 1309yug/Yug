@@ -1,11 +1,10 @@
 // =========================================
 // 1. CONFIGURATION (INTEGRATED LIVE URL)
 // =========================================
-const GOOGLE_DRIVE_BRIDGE_URL = "https://script.google.com/macros/s/AKfycbztcC213f8GE4SZV6d7bUXdS7sUNLH34xPw9TYKzCmNmBqiLlKY1Iao9c-1aOPdWnar/exec";
+const GOOGLE_DRIVE_BRIDGE_URL = "https://script.google.com/macros/s/AKfycbwAScoy0Wxl0jcssdKXmKuNEyxxNhWD_9wSkHfmnsnXZ-siycumy3WAtHzKFBFvlw6S/exec";
 
 // Global Session States
 let currentUserProfile = null;
-let simulatedFilesDB = []; 
 
 // Apply global CSS rules programmatically to prevent accidental text selections across the web portal
 const styleBlock = document.createElement("style");
@@ -122,7 +121,7 @@ function setupDashboardUI() {
             adminSection.classList.add("hidden");
         }
     }
-    renderFiles();
+    syncFilesLive(); // Fetch persistent spreadsheet files immediately upon entry
 }
 
 // =========================================
@@ -149,12 +148,12 @@ async function syncUsersLive() {
                 const isOwner = user.role === "primary_owner";
                 const isSuspended = user.status === "suspended";
                 
-                // Determine dynamic color setups for varying roles
-                let badgeStyle = "background:#7f8c8d; color:white;"; // Viewer / default grey
+                // Dynamic role background colors
+                let badgeStyle = "background:#7f8c8d; color:white;"; 
                 if (user.role === "primary_owner") {
-                    badgeStyle = "background:#2c3e50; color:white; font-weight:bold;"; // Slate Blue
+                    badgeStyle = "background:#2c3e50; color:white; font-weight:bold;"; 
                 } else if (user.role === "owner") {
-                    badgeStyle = "background:#16a085; color:white;"; // Teal
+                    badgeStyle = "background:#16a085; color:white;"; 
                 }
 
                 let actionBtnHTML = "";
@@ -187,11 +186,7 @@ async function syncUsersLive() {
                     
                     const res = await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
                         method: "POST",
-                        body: JSON.stringify({ 
-                            action: "toggleStatus", 
-                            username: targetUser, 
-                            status: nextStatus 
-                        })
+                        body: JSON.stringify({ action: "toggleStatus", username: targetUser, status: nextStatus })
                     });
                     const toggleResult = await res.json();
                     
@@ -223,12 +218,7 @@ if (createUserForm) {
         try {
             const response = await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
                 method: "POST",
-                body: JSON.stringify({ 
-                    action: "addUser", 
-                    username: username, 
-                    password: password, 
-                    role: role 
-                })
+                body: JSON.stringify({ action: "addUser", username: username, password: password, role: role })
             });
             const result = await response.json();
 
@@ -249,7 +239,7 @@ if (createUserForm) {
 }
 
 // =========================================
-// 5. DIRECT GOOGLE DRIVE FILE STREAMER & REMOVAL
+// 5. DIRECT GOOGLE DRIVE FILE STREAMER & PERSISTENT REMOVAL
 // =========================================
 if (uploadBtn) {
     uploadBtn.addEventListener("click", () => {
@@ -267,21 +257,16 @@ if (uploadBtn) {
                     body: JSON.stringify({ 
                         action: "upload", 
                         name: file.name, 
-                        fileData: e.target.result 
+                        fileData: e.target.result,
+                        uploadedBy: currentUserProfile.username
                     })
                 });
                 const result = await response.json();
 
                 if (result.status === "success") {
-                    simulatedFilesDB.push({ 
-                        id: "file_" + Date.now(), // Generate unique local tag tracking pointers
-                        name: file.name, 
-                        url: result.downloadUrl, 
-                        by: currentUserProfile.username 
-                    });
                     fileChooser.value = "";
-                    alert("File successfully saved directly to your Google Drive!");
-                    renderFiles();
+                    alert("File successfully saved directly to your Google Drive and Spreadsheet registry!");
+                    syncFilesLive(); // Re-fetch file array live from cloud database
                 } else {
                     alert("Storage Write Rejected: " + result.message);
                 }
@@ -296,38 +281,64 @@ if (uploadBtn) {
     });
 }
 
-function renderFiles() {
+async function syncFilesLive() {
     if (!filesGrid) return;
-    filesGrid.innerHTML = "";
-    
-    if (simulatedFilesDB.length === 0) {
-        filesGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: gray; padding: 1rem;">No files uploaded yet.</div>`;
-        return;
-    }
-    
-    simulatedFilesDB.forEach((file) => {
-        const card = document.createElement("div");
-        card.className = "file-card";
-        card.innerHTML = `
-            <span class="file-icon">☁️</span>
-            <h4>${file.name}</h4>
-            <p class="user-meta">By: ${file.by}</p>
-            <div class="file-actions-row" style="display:flex; gap:8px;">
-                <a href="${file.url}" target="_blank" class="file-action" style="flex:1; text-align:center;">Fetch</a>
-                <button class="file-action delete-file-btn" data-id="${file.id}" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:6px 12px; cursor:pointer;">Purge</button>
-            </div>
-        `;
-        filesGrid.appendChild(card);
-    });
+    filesGrid.innerHTML = "<div style='grid-column: 1/-1; text-align: center; color: gray;'>Loading secure file assets...</div>";
 
-    // Handle interactive deletion triggers
-    document.querySelectorAll(".delete-file-btn").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-            const fileId = e.target.dataset.id;
-            if (confirm("Remove this document visualization from your synced interface dashboard grid?")) {
-                simulatedFilesDB = simulatedFilesDB.filter(item => item.id !== fileId);
-                renderFiles();
-            }
+    try {
+        const response = await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
+            method: "POST",
+            body: JSON.stringify({ action: "getFiles" })
         });
-    });
+        const result = await response.json();
+
+        if (result.status === "success") {
+            filesGrid.innerHTML = "";
+            
+            if (result.files.length === 0) {
+                filesGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: gray; padding: 1rem;">No files uploaded yet.</div>`;
+                return;
+            }
+
+            result.files.forEach((file) => {
+                const card = document.createElement("div");
+                card.className = "file-card";
+                card.innerHTML = `
+                    <span class="file-icon">☁️</span>
+                    <h4>${file.name}</h4>
+                    <p class="user-meta">By: ${file.by}</p>
+                    <div class="file-actions-row" style="display:flex; gap:8px;">
+                        <a href="${file.url}" target="_blank" class="file-action" style="flex:1; text-align:center;">Fetch</a>
+                        <button class="file-action delete-file-btn" data-url="${file.url}" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:6px 12px; cursor:pointer;">Purge</button>
+                    </div>
+                `;
+                filesGrid.appendChild(card);
+            });
+
+            // Handle cloud deletion triggers
+            document.querySelectorAll(".delete-file-btn").forEach(btn => {
+                btn.addEventListener("click", async (e) => {
+                    const fileUrl = e.currentTarget.dataset.url;
+                    if (confirm("Permanently remove this document row reference from the cloud database?")) {
+                        e.currentTarget.disabled = true;
+                        e.currentTarget.textContent = "...";
+                        
+                        const deleteRes = await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
+                            method: "POST",
+                            body: JSON.stringify({ action: "deleteFile", url: fileUrl })
+                        });
+                        const deleteResult = await deleteRes.json();
+                        
+                        if (deleteResult.status === "success") {
+                            syncFilesLive(); // Instantly update view
+                        } else {
+                            alert("Deletion error: " + deleteResult.message);
+                        }
+                    }
+                });
+            });
+        }
+    } catch (err) {
+        filesGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: red;">Failed to retrieve files from sheet registry.</div>`;
+    }
 }
