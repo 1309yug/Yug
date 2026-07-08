@@ -306,10 +306,10 @@ async function syncFilesLive() {
                 card.innerHTML = `
                     <span class="file-icon">☁️</span>
                     <h4>${file.name}</h4>
-                    <p class="user-meta">By: ${file.by}</p>
+                
                     <div class="file-actions-row" style="display:flex; gap:8px;">
-                        <a href="${file.url}" target="_blank" class="file-action" style="flex:1; text-align:center;">Fetch</a>
-                        <button class="file-action delete-file-btn" data-url="${file.url}" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:6px 12px; cursor:pointer;">Purge</button>
+                        <a href="${file.url}" target="_blank" class="file-action" style="flex:1; text-align:center;">Download</a>
+                        <button class="file-action delete-file-btn" data-url="${file.url}" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:6px 12px; cursor:pointer;">Delete</button>
                     </div>
                 `;
                 filesGrid.appendChild(card);
