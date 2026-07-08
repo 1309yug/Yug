@@ -61,7 +61,7 @@ if (loginForm) {
         const username = emailInput.value.trim();
         const password = passwordInput.value;
 
-        if (greetingText) greetingText.textContent = "Verifying...";
+        if (greetingText) greetingText.textContent = "Welcome...";
         if (greetingSpinner) greetingSpinner.classList.remove("hidden");
 
         try {
@@ -247,7 +247,7 @@ if (uploadBtn) {
         if (!file) return alert("Select a file first.");
 
         uploadBtn.disabled = true;
-        uploadBtn.textContent = "Streaming to Drive...";
+        uploadBtn.textContent = "Uploading...";
 
         const reader = new FileReader();
         reader.onload = async function (e) {
@@ -265,7 +265,7 @@ if (uploadBtn) {
 
                 if (result.status === "success") {
                     fileChooser.value = "";
-                    alert("File successfully saved directly to your Google Drive and Spreadsheet registry!");
+                    alert("File successfully uploaded!");
                     syncFilesLive(); // Re-fetch file array live from cloud database
                 } else {
                     alert("Storage Write Rejected: " + result.message);
@@ -274,7 +274,7 @@ if (uploadBtn) {
                 alert("Upload tracking failure.");
             } finally {
                 uploadBtn.disabled = false;
-                uploadBtn.textContent = "Upload to Cloud";
+                uploadBtn.textContent = "Upload to Cloud Storage";
             }
         };
         reader.readAsDataURL(file);
