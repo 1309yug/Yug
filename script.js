@@ -1,7 +1,7 @@
 // =========================================
 // 1. CONFIGURATION (INTEGRATED LIVE URL)
 // =========================================
-const GOOGLE_DRIVE_BRIDGE_URL = "https://script.google.com/macros/s/AKfycbxvMfFa563jxeBEqkW1RCG8-yrt0u53Iu1PNIc5xIWE5GRzzDObzvaoiLBtNDjRfIjyFg/exec";
+const GOOGLE_DRIVE_BRIDGE_URL = "https://script.google.com/macros/s/AKfycbyJt5t5lg04gpQ6IT9cLxivJzWvmZFX4MeWniqQ1JCSp5Alc7lRioxn6Y0jEoU3wA81XA/exec";
 
 // Global Session States
 let currentUserProfile = null;
@@ -49,11 +49,12 @@ const userRoleBadge = document.getElementById("user-role-badge");
 
 // Administrative & Upload Sections
 const adminSection = document.getElementById("admin-section");
-const uploadContainer = document.getElementById("upload-container"); 
+const uploadContainer = document.getElementById("upload-container");
 const fileChooser = document.getElementById("file-chooser");
 const uploadBtn = document.getElementById("upload-btn");
 const filesGrid = document.getElementById("files-grid");
 
+// Failed login tracker reference
 let failedLogsContainer = document.getElementById("failed-logs-container");
 
 // =========================================
@@ -112,7 +113,7 @@ function setupDashboardUI() {
     userDisplayName.textContent = currentUserProfile.username;
     userRoleBadge.textContent = currentUserProfile.role.toUpperCase().replace("_", " ");
     
-    // VIEWER RESTRICTION: Hide upload elements completely
+    // VIEWER RESTRICTION: Hide upload components
     if (uploadContainer) {
         if (currentUserProfile.role === "viewer") {
             uploadContainer.classList.add("hidden");
@@ -121,7 +122,7 @@ function setupDashboardUI() {
         }
     }
 
-    // PRIMARY OWNER ACCESS: Display administrative panel and logs
+    // PRIMARY OWNER ACCESS: Display control blocks and audit tracking logs
     if (adminSection) {
         if (currentUserProfile.role === "primary_owner") {
             adminSection.classList.remove("hidden");
@@ -199,7 +200,7 @@ async function syncFilesLive() {
                 const card = document.createElement("div");
                 card.className = "file-card";
                 
-                // Show purge button only if user is NOT a viewer
+                // Show delete button only if user is NOT a viewer
                 const deleteButtonHTML = (currentUserProfile.role !== "viewer") 
                     ? `<button class="file-action delete-file-btn" data-url="${file.url}" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:6px 12px; cursor:pointer;">Purge</button>`
                     : "";
