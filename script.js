@@ -1,194 +1,96 @@
-// =========================================
-// 1. CONFIGURATION (INTEGRATED LIVE URL)
-// =========================================
-const GOOGLE_DRIVE_BRIDGE_URL = "https://script.google.com/macros/s/AKfycbyJt5t5lg04gpQ6IT9cLxivJzWvmZFX4MeWniqQ1JCSp5Alc7lRioxn6Y0jEoU3wA81XA/exec";
+// =========================================================================
+// SECURE FRONTEND CONTROLLER (script.js)
+// Links login portals, file processing, and immediate Sheet database syncing
+// =========================================================================
 
-// Global Session States
-let currentUserProfile = null;
+// !!! REPLACE THIS URL WITH YOUR DEPLOYED WEB APP EXECUTION LINK !!!
+const GOOGLE_DRIVE_BRIDGE_URL = "https://script.google.com/macros/s/AKfycbzYUVxnJXmNoY6_0o1fANzrIo0b7RuuG8o7hisZKWLKMJ6ZkCdti12kUSFewucLWgARuA/exec";
 
-// Apply UI system CSS rules programmatically
-const styleBlock = document.createElement("style");
-styleBlock.textContent = `
-  body, html, .card, .control-item, .file-card, h2, h3, h4, p, span, button {
-    -webkit-user-select: none; user-select: none;
-  }
-  input, textarea, select {
-    -webkit-user-select: text; user-select: text;
-  }
-  #login-screen, #dashboard-screen {
-    opacity: 0; transform: translateY(15px);
-    animation: screenEntrance 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-  }
-  @keyframes screenEntrance { to { opacity: 1; transform: translateY(0); } }
-  .hidden { display: none !important; opacity: 0 !important; }
-  .file-card {
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
-  }
-  .file-card:hover { transform: translateY(-6px); box-shadow: 0 10px 20px rgba(0,0,0,0.12); }
-  button:active, .file-action:active { transform: scale(0.95); }
-  .spinner-pulse { animation: subtlePulse 1.4s infinite ease-in-out; }
-  @keyframes subtlePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-`;
-document.head.appendChild(styleBlock);
+// Keep track of who is logged in globally
+let currentUserProfile = {
+    username: "",
+    role: "viewer"
+};
 
-// Run everything ONLY after the DOM (HTML) is fully loaded to prevent null selections
 document.addEventListener("DOMContentLoaded", () => {
-
-    // =========================================
-    // 2. DOM ELEMENT SELECTORS
-    // =========================================
-    const loginScreen = document.getElementById("login-screen");
-    const dashboardScreen = document.getElementById("dashboard-screen");
+    // DOM Elements
+    const loginPortal = document.getElementById("login-portal");
     const loginForm = document.getElementById("login-form");
-    const emailInput = document.getElementById("email-input"); 
-    const passwordInput = document.getElementById("password-input");
-    const errorMsg = document.getElementById("error-msg");
-
-    const greetingText = document.getElementById("greeting-text");
-    const greetingSpinner = document.getElementById("greeting-spinner");
+    const workspaceDashboard = document.getElementById("workspace-dashboard");
     const logoutBtn = document.getElementById("logout-btn");
-    const userDisplayName = document.getElementById("user-display-name");
-    const userRoleBadge = document.getElementById("user-role-badge");
-
-    // Administrative & Upload Sections
-    const adminSection = document.getElementById("admin-section");
-    const uploadContainer = document.getElementById("upload-container");
-    const fileChooser = document.getElementById("file-chooser");
-    const uploadBtn = document.getElementById("upload-btn");
-    const filesGrid = document.getElementById("files-grid");
-
-    // Failed login tracker reference
-    let failedLogsContainer = document.getElementById("failed-logs-container");
+    const userBadge = document.getElementById("user-badge");
+    const uploadPanel = document.getElementById("upload-panel");
+    const fileListBody = document.getElementById("file-list-body");
+    const adminPanel = document.getElementById("admin-panel");
+    const userRegistryContainer = document.getElementById("user-registry-container");
 
     // =========================================
-    // 3. SECURE SHEET AUTHENTICATION ENGINE
+    // 1. SIGN IN ACTION
     // =========================================
     if (loginForm) {
         loginForm.addEventListener("submit", async (e) => {
             e.preventDefault();
-            if (errorMsg) errorMsg.textContent = "";
-            
-            // Safe check for inputs
-            const username = emailInput ? emailInput.value.trim() : "";
-            const password = passwordInput ? passwordInput.value : "";
-
-            if (greetingText) greetingText.textContent = "Verifying...";
-            if (greetingSpinner) greetingSpinner.classList.remove("hidden");
+            const usernameInput = document.getElementById("username").value;
+            const passwordInput = document.getElementById("password").value;
 
             try {
                 const response = await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
                     method: "POST",
-                    body: JSON.stringify({ action: "login", username: username, password: password })
+                    body: JSON.stringify({
+                        action: "login",
+                        username: usernameInput,
+                        password: passwordInput
+                    })
                 });
-                const result = await response.json();
-                
-                if (result.status === "success") {
-                    currentUserProfile = { username: result.username, role: result.role };
-                    setupDashboardUI();
+                const data = await response.json();
+
+                if (data.status === "success") {
+                    currentUserProfile.username = data.username;
+                    currentUserProfile.role = data.role;
+
+                    // Switch panels
+                    loginPortal.classList.add("hidden");
+                    workspaceDashboard.classList.remove("hidden");
+
+                    // Set branding/welcome info
+                    userBadge.textContent = `${currentUserProfile.username} (${currentUserProfile.role.toUpperCase()})`;
+
+                    // Setup authorized view layout
+                    configureUIForRole(currentUserProfile.role);
+                    
+                    // Fetch data
+                    loadWorkspaceFiles();
+                    if (currentUserProfile.role !== "viewer") {
+                        syncUsersLive();
+                    }
                 } else {
-                    resetLoginUI();
-                    if (errorMsg) errorMsg.textContent = result.message || "Access denied.";
+                    alert("Authentication Failed: " + data.message);
                 }
             } catch (err) {
-                resetLoginUI();
-                if (errorMsg) errorMsg.textContent = "Network error connection failed.";
+                alert("Database access timed out. Make sure your Apps Script web app is deployed correctly.");
             }
         });
     }
 
-    function resetLoginUI() {
-        if (greetingText) greetingText.textContent = "Hi, Yug";
-        if (greetingSpinner) greetingSpinner.classList.add("hidden");
-    }
-
-    if (logoutBtn) {
-        logoutBtn.addEventListener("click", () => {
-            currentUserProfile = null;
-            if (dashboardScreen) dashboardScreen.classList.add("hidden");
-            if (loginScreen) loginScreen.classList.remove("hidden");
-            resetLoginUI();
-        });
-    }
-
-    function setupDashboardUI() {
-        if (loginScreen) loginScreen.classList.add("hidden");
-        if (dashboardScreen) dashboardScreen.classList.remove("hidden");
-        
-        if (userDisplayName) userDisplayName.textContent = currentUserProfile.username;
-        if (userRoleBadge) userRoleBadge.textContent = currentUserProfile.role.toUpperCase().replace("_", " ");
-        
-        // VIEWER RESTRICTION: Hide upload components
-        if (uploadContainer) {
-            if (currentUserProfile.role === "viewer") {
-                uploadContainer.classList.add("hidden");
-            } else {
-                uploadContainer.classList.remove("hidden");
-            }
-        }
-
-        // PRIMARY OWNER ACCESS: Display control blocks and audit tracking logs
-        if (adminSection) {
-            if (currentUserProfile.role === "primary_owner") {
-                adminSection.classList.remove("hidden");
-                syncUsersLive();
-                syncFailedSecurityLogs();
-            } else {
-                adminSection.classList.add("hidden");
-            }
-        }
-        syncFilesLive(); 
-    }
-
     // =========================================
-    // 4. SECURITY AUDITING & SYSTEM LOGS
+    // 2. CONFIGURE ROLE PERMISSIONS (CLIENT-SIDE VISIBILITY)
     // =========================================
-    async function syncFailedSecurityLogs() {
-        if (!failedLogsContainer && adminSection) {
-            failedLogsContainer = document.createElement("div");
-            failedLogsContainer.id = "failed-logs-container";
-            failedLogsContainer.style = "margin-top:20px; padding:15px; background:#fdf2f2; border:1px solid #f5c6cb; border-radius:6px;";
-            adminSection.appendChild(failedLogsContainer);
-        }
-        
-        if (failedLogsContainer) {
-            failedLogsContainer.innerHTML = "<h4 style='color:#721c24; margin-top:0;'>⚠️ Security Audit Logs (Failed Passwords)</h4><p class='spinner-pulse'>Retrieving database checks...</p>";
-        }
-
-        try {
-            const response = await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
-                method: "POST",
-                body: JSON.stringify({ action: "getFailedLogs" })
-            });
-            const result = await response.json();
-
-            if (result.status === "success" && failedLogsContainer) {
-                failedLogsContainer.innerHTML = "<h4 style='color:#721c24; margin-top:0;'>⚠️ Security Audit Logs (Failed Passwords)</h4>";
-                if (result.logs.length === 0) {
-                    failedLogsContainer.innerHTML += "<p style='color:green; font-size:13px;'>No suspicious login failures detected.</p>";
-                    return;
-                }
-                result.logs.forEach(log => {
-                    const item = document.createElement("div");
-                    item.style = "font-size:12px; border-bottom:1px solid #f5c6cb; padding:6px 0; color:#721c24;";
-                    const formattedTime = new Date(log.time).toLocaleString();
-                    item.innerHTML = `Target User: <strong>${log.username}</strong> — Attempt Timestamp: <em>${formattedTime}</em>`;
-                    failedLogsContainer.appendChild(item);
-                });
-            }
-        } catch(e) {
-            if (failedLogsContainer) {
-                failedLogsContainer.innerHTML = "<p style='color:red;'>Failed to load audit history.</p>";
-            }
+    function configureUIForRole(role) {
+        if (role === "viewer") {
+            uploadPanel.classList.add("hidden");
+            adminPanel.classList.add("hidden");
+        } else {
+            // Editors and Primary Owners can upload files and manage users
+            uploadPanel.classList.remove("hidden");
+            adminPanel.classList.remove("hidden");
         }
     }
 
     // =========================================
-    // 5. FILE SYNC ENGINE (VIEWER HANDLING)
+    // 3. LOAD FILE REPOSITORY
     // =========================================
-    async function syncFilesLive() {
-        if (!filesGrid) return;
-        filesGrid.innerHTML = "<div style='grid-column:1/-1; text-align:center;' class='spinner-pulse'>Loading files...</div>";
-
+    async function loadWorkspaceFiles() {
+        fileListBody.innerHTML = `<tr><td colspan="3">Retrieving registry files...</td></tr>`;
         try {
             const response = await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
                 method: "POST",
@@ -197,66 +99,126 @@ document.addEventListener("DOMContentLoaded", () => {
             const result = await response.json();
 
             if (result.status === "success") {
-                filesGrid.innerHTML = "";
-                
-                if (result.files.length === 0) {
-                    filesGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:1rem;">No asset records found.</div>`;
-                    return;
-                }
-
-                result.files.forEach((file) => {
-                    const card = document.createElement("div");
-                    card.className = "file-card";
-                    
-                    // Show delete button only if user is NOT a viewer
-                    const deleteButtonHTML = (currentUserProfile.role !== "viewer") 
-                        ? `<button class="file-action delete-file-btn" data-url="${file.url}" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:6px 12px; cursor:pointer;">DELETE</button>`
-                        : "";
-
-                    card.innerHTML = `
-                        <span class="file-icon">🗃️</span>
-                        <h4>${file.name}</h4>
-                        <p class="user-meta">By: ${file.by}</p>
-                        <div class="file-actions-row" style="display:flex; gap:8px;">
-                            <a href="${file.url}" target="_blank" class="file-action" style="flex:1; text-align:center; background:#3498db; color:white; text-decoration:none; padding:6px; border-radius:4px;">DOWNLOAD / Download</a>
-                            ${deleteButtonHTML}
-                        </div>
-                    `;
-                    filesGrid.appendChild(card);
-                });
-
-                document.querySelectorAll(".delete-file-btn").forEach(btn => {
-                    btn.addEventListener("click", async (e) => {
-                        const fileUrl = e.currentTarget.dataset.url;
-                        if (confirm("Permanently drop this file row resource?")) {
-                            e.currentTarget.disabled = true;
-                            
-                            const deleteRes = await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
-                                method: "POST",
-                                body: JSON.stringify({ action: "deleteFile", url: fileUrl, triggeredBy: currentUserProfile.username })
-                            });
-                            const deleteResult = await deleteRes.json();
-                            if (deleteResult.status === "success") {
-                                syncFilesLive();
-                            } else {
-                                alert(deleteResult.message);
-                            }
-                        }
-                    });
-                });
+                renderFiles(result.files);
+            } else {
+                fileListBody.innerHTML = `<tr><td colspan="3" style="color:red;">Error: ${result.message}</td></tr>`;
             }
         } catch (err) {
-            filesGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: red;">Error pulling file array.</div>`;
+            fileListBody.innerHTML = `<tr><td colspan="3" style="color:red;">Failed to connect to file service.</td></tr>`;
         }
     }
 
+    function renderFiles(files) {
+        if (!files || files.length === 0) {
+            fileListBody.innerHTML = `<tr><td colspan="3">No documents found in database.</td></tr>`;
+            return;
+        }
+
+        fileListBody.innerHTML = "";
+        files.forEach(file => {
+            const tr = document.createElement("tr");
+            
+            const fileLink = `<a href="${file.url}" target="_blank" style="color:#2980b9; font-weight:bold; text-decoration:none;">🔗 ${file.name}</a>`;
+            const uploadedBy = `<span>${file.by || "System"}</span>`;
+            
+            // Render delete button only for editors and owners
+            let actionBtn = "";
+            if (currentUserProfile.role !== "viewer") {
+                actionBtn = `<button class="btn-danger btn-sm" onclick="triggerFileDeletion('${file.url}')">Delete</button>`;
+            } else {
+                actionBtn = `<span style="color:#7f8c8d; font-size:12px;">Read Only</span>`;
+            }
+
+            tr.innerHTML = `
+                <td>${fileLink}</td>
+                <td>${uploadedBy}</td>
+                <td>${actionBtn}</td>
+            `;
+            fileListBody.appendChild(tr);
+        });
+    }
+
+    // Make file deletion accessible globally to the inline buttons
+    window.triggerFileDeletion = async (fileUrl) => {
+        if (!confirm("Are you sure you want to permanently delete this file?")) return;
+
+        try {
+            const response = await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
+                method: "POST",
+                body: JSON.stringify({
+                    action: "deleteFile",
+                    url: fileUrl,
+                    triggeredBy: currentUserProfile.username
+                })
+            });
+            const result = await response.json();
+
+            if (result.status === "success") {
+                loadWorkspaceFiles(); // Reload list
+            } else {
+                alert("Operation Rejected: " + result.message);
+            }
+        } catch (err) {
+            alert("Error trying to process deletion request.");
+        }
+    };
+
     // =========================================
-    // 6. MANAGEMENT INTERFACE SYNCING
+    // 4. USER SYNCHRONIZATION AND CREATION
+    // =========================================
+    const addUserForm = document.getElementById("add-user-form");
+    if (addUserForm) {
+        addUserForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const usernameInput = document.getElementById("new-username");
+            const passwordInput = document.getElementById("new-password");
+            const roleSelect = document.getElementById("new-role");
+
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
+            const role = roleSelect.value;
+
+            const submitBtn = addUserForm.querySelector("button[type='submit']");
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Syncing with Spreadsheet...";
+
+            try {
+                const response = await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        action: "addUser",
+                        username: username,
+                        password: password,
+                        role: role,
+                        triggeredBy: currentUserProfile.username
+                    })
+                });
+                const result = await response.json();
+
+                if (result.status === "success") {
+                    alert(`User "${username}" was successfully synced to Google Sheets!`);
+                    usernameInput.value = "";
+                    passwordInput.value = "";
+                    roleSelect.value = "viewer";
+                    syncUsersLive(); // Reload the visual user database
+                } else {
+                    alert("Failure: " + result.message);
+                }
+            } catch (err) {
+                alert("Network timeout. The user could not be synced.");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Add & Sync User";
+            }
+        });
+    }
+
+    // =========================================
+    // 5. LIVE SYNCHRONIZE USER LIST
     // =========================================
     async function syncUsersLive() {
-        const userListContainer = document.getElementById("user-list-container");
-        if (!userListContainer) return;
-        userListContainer.innerHTML = "<p>Updating dynamic registry...</p>";
+        if (!userRegistryContainer) return;
+        userRegistryContainer.innerHTML = "<p>Connecting to user directory sync...</p>";
 
         try {
             const response = await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
@@ -266,73 +228,128 @@ document.addEventListener("DOMContentLoaded", () => {
             const result = await response.json();
 
             if (result.status === "success") {
-                userListContainer.innerHTML = "";
-                result.users.forEach((user) => {
-                    const div = document.createElement("div");
-                    div.className = "control-item";
-                    div.style = "display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee;";
-                    
-                    const isOwner = user.role === "primary_owner";
-                    const isSuspended = user.status === "suspended";
-                    const actionBtnHTML = !isOwner 
-                        ? `<button class="status-toggle-btn" data-user="${user.username}" data-action="${isSuspended?'active':'suspended'}" style="background:${isSuspended?'green':'red'}; color:white; border:none; padding:4px; border-radius:4px; cursor:pointer;">${isSuspended?'Activate':'Suspend'}</button>`
-                        : `<span>Master</span>`;
-
-                    div.innerHTML = `<div><strong>${user.username}</strong> [${user.role.toUpperCase()}] (${user.status})</div><div>${actionBtnHTML}</div>`;
-                    userListContainer.appendChild(div);
-                });
-
-                document.querySelectorAll(".status-toggle-btn").forEach(btn => {
-                    btn.addEventListener("click", async (e) => {
-                        e.target.disabled = true;
-                        await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
-                            method: "POST",
-                            body: JSON.stringify({ action: "toggleStatus", username: e.target.dataset.user, status: e.target.dataset.action, triggeredBy: currentUserProfile.username })
-                        });
-                        syncUsersLive();
-                    });
-                });
+                renderUserList(result.users);
+            } else {
+                userRegistryContainer.innerHTML = `<p style="color:red;">Sync Failed: ${result.message}</p>`;
             }
-        } catch(e){}
+        } catch (err) {
+            userRegistryContainer.innerHTML = `<p style="color:red;">Error updating registry.</p>`;
+        }
     }
 
+    function renderUserList(users) {
+        userRegistryContainer.innerHTML = "";
+        if (!users || users.length === 0) {
+            userRegistryContainer.innerHTML = "<p>No users registered.</p>";
+            return;
+        }
+
+        users.forEach(user => {
+            const div = document.createElement("div");
+            div.className = "user-row";
+
+            const userMeta = `<span><strong>${user.username}</strong> - Role: <em>${user.role.toUpperCase()}</em></span>`;
+            
+            // Suspension button logic
+            const isSuspended = user.status === "suspended";
+            const btnText = isSuspended ? "Activate Account" : "Suspend Account";
+            const btnClass = isSuspended ? "btn-success" : "btn-danger";
+            const targetStatus = isSuspended ? "active" : "suspended";
+
+            const toggleBtn = `<button class="${btnClass}" onclick="toggleUserStatus('${user.username}', '${targetStatus}')">${btnText}</button>`;
+
+            div.innerHTML = `
+                ${userMeta}
+                <div>${toggleBtn}</div>
+            `;
+            userRegistryContainer.appendChild(div);
+        });
+    }
+
+    window.toggleUserStatus = async (username, status) => {
+        try {
+            const response = await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
+                method: "POST",
+                body: JSON.stringify({
+                    action: "toggleStatus",
+                    username: username,
+                    status: status,
+                    triggeredBy: currentUserProfile.username
+                })
+            });
+            const result = await response.json();
+            if (result.status === "success") {
+                syncUsersLive();
+            } else {
+                alert("Operation failed: " + result.message);
+            }
+        } catch (err) {
+            alert("Error altering database entry.");
+        }
+    };
+
+    // =========================================
+    // 6. UPLOAD PROCESS HANDLER
+    // =========================================
+    const uploadBtn = document.getElementById("upload-btn");
     if (uploadBtn) {
         uploadBtn.addEventListener("click", () => {
-            const file = fileChooser ? fileChooser.files[0] : null;
-            if (!file) {
-                alert("Please select a file first.");
+            const fileInput = document.getElementById("file-input");
+            if (!fileInput || fileInput.files.length === 0) {
+                alert("Please select a file to upload.");
                 return;
             }
 
-            uploadBtn.disabled = true;
-            uploadBtn.textContent = "Processing Upload...";
-
+            const file = fileInput.files[0];
             const reader = new FileReader();
-            reader.onload = async function (e) {
+
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = "Uploading to Drive...";
+
+            reader.onload = async function(e) {
+                const fileData = e.target.result;
                 try {
                     const response = await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
                         method: "POST",
-                        body: JSON.stringify({ 
-                            action: "upload", name: file.name, fileData: e.target.result, 
-                            uploadedBy: currentUserProfile.username, triggeredBy: currentUserProfile.username 
+                        body: JSON.stringify({
+                            action: "upload",
+                            fileData: fileData,
+                            name: file.name,
+                            uploadedBy: currentUserProfile.username,
+                            triggeredBy: currentUserProfile.username
                         })
                     });
                     const result = await response.json();
+
                     if (result.status === "success") {
-                        if (fileChooser) fileChooser.value = "";
-                        syncFilesLive();
+                        alert("File successfully saved directly to Drive and database!");
+                        fileInput.value = ""; // Clear file input
+                        loadWorkspaceFiles(); // Reload table
                     } else {
-                        alert(result.message);
+                        alert("Error: " + result.message);
                     }
                 } catch (err) {
-                    alert("Upload failed.");
+                    alert("Upload request failed.");
                 } finally {
                     uploadBtn.disabled = false;
-                    uploadBtn.textContent = "Upload to Cloud";
+                    uploadBtn.textContent = "Upload File";
                 }
             };
             reader.readAsDataURL(file);
         });
     }
+
+    // =========================================
+    // 7. SIGN OUT (RESET STATE)
+    // =========================================
+    if (logoutBtn) {
+        logoutBtn.addEventListener("click", () => {
+            currentUserProfile = { username: "", role: "viewer" };
+            loginPortal.classList.remove("hidden");
+            workspaceDashboard.classList.add("hidden");
+            document.getElementById("username").value = "";
+            document.getElementById("password").value = "";
+        });
+    }
 });
-                    
+      
