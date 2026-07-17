@@ -305,7 +305,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             uploadBtn.disabled = true;
-            uploadBtn.textContent = "Processing Stream...";
+            uploadBtn.textContent = "Processing Upload...";
 
             const reader = new FileReader();
             reader.onload = async function (e) {
