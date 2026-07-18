@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cloud Repository and Identity Admin Panel</title>
+  <title>Yug Patel</title>
   <style>
     :root { 
       /* Core Canvas & Surfaces */
@@ -235,7 +235,7 @@
 
   <!-- AUTHENTICATION PORTAL -->
   <div id="login-portal" class="login-box">
-    <h2 style="margin-top:0;">🔐 Security System Login</h2>
+    <h2 style="margin-top:0;">Hi, Yug </h2>
     <form id="login-form">
       <div class="form-group">
         <label>Username</label>
@@ -245,23 +245,23 @@
         <label>Password</label>
         <input type="password" id="password" required autocomplete="current-password">
       </div>
-      <button type="submit" style="width:100%;">Authenticate</button>
+      <button type="submit" style="width:100%;">LOGIN</button>
     </form>
   </div>
 
   <!-- CONTROL DASHBOARD -->
   <div id="workspace-dashboard" class="container hidden">
     <div class="dashboard-header">
-      <h2 style="margin:0; border:none; padding:0;">📁 Repository Management</h2>
+      <h2 style="margin:0; border:none; padding:0;">Yug Patel</h2>
       <div class="header-controls">
         <span id="user-badge" style="font-weight:bold;"></span>
-        <button id="logout-btn" class="btn-danger">Disconnect</button>
+        <button id="logout-btn" class="btn-danger">Logout</button>
       </div>
     </div>
 
     <!-- DOCUMENT UPLOAD COMPONENT -->
     <div id="upload-panel" class="hidden" style="background: var(--bg-surface); padding: 20px; border-radius: 6px; margin: 20px 0; border: 1px solid var(--border);">
-      <h3 style="margin-top:0;">📤 Store New Document File</h3>
+      <h3 style="margin-top:0;"> Store New File</h3>
       <div class="form-group" style="margin-bottom: 15px;">
         <input type="file" id="file-input" style="background:transparent; border:none; padding:0;">
       </div>
@@ -273,7 +273,7 @@
     <div class="table-wrapper">
       <table>
         <thead>
-          <tr><th>Resource File Name</th><th>Stored By</th><th>Action</th></tr>
+          <tr><th>File Name</th><th>Stored By</th><th>Action</th></tr>
         </thead>
         <tbody id="file-list-body"></tbody>
       </table>
@@ -281,7 +281,7 @@
 
     <!-- ADMINISTRATIVE CONTROL LAYER -->
     <div id="admin-panel" class="hidden" style="margin-top: 40px; border-top: 3px solid var(--border); padding-top: 20px;">
-      <h3>👥 Security Operations Console</h3>
+      <h3>Security Console</h3>
       
       <!-- ADD & SYNC NEW USER PROFILE (Gatekeeped Option Fields) -->
       <form id="add-user-form" class="responsive-form">
@@ -292,17 +292,17 @@
           <option value="editor">Editor</option>
           <!-- Primary Owner role removed from dropdown selection list for safety protection -->
         </select>
-        <button type="submit" class="btn-success">Add & Sync User</button>
+        <button type="submit" class="btn-success">Add User</button>
       </form>
 
       <!-- PANELS FOR ACCOUNT ACTIVE DIRECTORY & EXPIRED ATTACKS -->
       <div class="admin-grid">
         <div>
-          <h4>Active Directory Users</h4>
+          <h4>Users Directory</h4>
           <div id="user-registry-container"></div>
         </div>
         <div>
-          <h4>⚠️ Security Incident Logs (Failed Logins)</h4>
+          <h4>⚠️ Failed Logins ⚠️</h4>
           <div id="failed-logs-container"></div>
         </div>
       </div>
