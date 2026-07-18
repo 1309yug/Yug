@@ -3,7 +3,7 @@
 // Connected Web App Endpoint Target Deployment Configuration
 // =========================================================================
 
-const GOOGLE_DRIVE_BRIDGE_URL = "https://script.google.com/macros/s/AKfycbylUaOnA4QeudP4cgmIhjPo9z-TnrL1dN8hSUm4mD5WxLbs1FVpDS6u0AdTaZSHwOwM9g/exec";
+const GOOGLE_DRIVE_BRIDGE_URL = "https://script.google.com/macros/s/AKfycbyn6_nRe8TaNwioB3j2SNVj9hm3XEKPjou-3Qo3fpuUVnDFPMm33FYP1abJ4aZbk3pF/exec";
 
 let currentUserProfile = { username: "", role: "viewer" };
 
