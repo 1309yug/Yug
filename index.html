@@ -1,75 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yug Patel</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cloud Repository and Identity Admin Panel</title>
+  <style>
+    :root { --primary: #3498db; --success: #2ecc71; --danger: #e74c3c; --dark: #2c3e50; --light: #ecf0f1; }
+    body { font-family: sans-serif; background: #f5f6fa; padding: 20px; color: var(--dark); }
+    .container { max-width: 950px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .hidden { display: none !important; }
+    h2, h3, h4 { border-bottom: 2px solid var(--light); padding-bottom: 8px; }
+    .login-box { max-width: 400px; margin: 80px auto; padding: 30px; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+    .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    button { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
+    button:hover { opacity: 0.9; }
+    button:disabled { background: #95a5a6; cursor: not-allowed; }
+    .btn-danger { background: var(--danger); }
+    .btn-success { background: var(--success); }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--light); }
+    th { background: var(--light); }
+    .row-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--light); margin-bottom: 5px; border-radius: 4px; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div id="login-screen" class="card">
-            <div id="greeting-box">
-                <h2 id="greeting-text">Hi, Yug</h2>
-                <div id="greeting-spinner" class="spinner hidden"></div>
-            </div>
-            <p class="subtitle">Sign in to access secure documents</p>
-            
-            <form id="login-form" autocomplete="off">
-                <div class="input-group">
-                    <input type="text" id="email-input" placeholder="Username or Email" required>
-                </div>
-                <div class="input-group">
-                    <input type="password" id="password-input" placeholder="Password" required>
-                </div>
-                <button type="submit" class="btn">Login</button>
-                <p id="error-msg" class="error-msg"></p>
-            </form>
-        </div>
 
-        <div id="dashboard-screen" class="card hidden">
-            <div class="dashboard-header">
-                <div>
-                    <h2 id="user-display-name">Storage Dashboard</h2>
-                    <span id="user-role-badge" class="badge">Role</span>
-                </div>
-                <button id="logout-btn" class="btn btn-danger">Logout</button>
-                
-            </div>
+  <!-- AUTHENTICATION PORTAL -->
+  <div id="login-portal" class="login-box">
+    <h2>🔐 Security System Login</h2>
+    <form id="login-form">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="username" required>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" required>
+      </div>
+      <button type="submit" style="width:100%;">Authenticate</button>
+    </form>
+  </div>
 
-            <div id="admin-section" class="admin-section hidden">
-                <h3>User & Role Management</h3>
-                <p class="section-desc">Create secure user accounts, assign posts, or suspend system entry.</p>
-                
-                <form id="create-user-form" class="admin-form" autocomplete="off">
-                    <input type="text" id="new-username" placeholder="New Username" required>
-                    <input type="text" id="new-email" placeholder="Email (user@portal.local)" required>
-                    <input type="password" id="new-password" placeholder="Password" required>
-                    <select id="new-role">
-                        <option value="owner">Co-Owner</option>
-                        <option value="viewer" selected>Viewer</option>
-                    </select>
-                    <button type="submit" class="btn btn-sm">Create User</button>
-                </form>
-                
-                <div id="user-list-container" class="control-grid"></div>
-            </div>
-
-            <div id="upload-section" class="upload-zone">
-                <h3>Upload New Document (Max 20MB Auto-Drive Switch)</h3>
-                <div class="upload-container-block">
-                    <input type="file" id="file-chooser">
-                    <button id="upload-btn" class="btn">Upload to Cloud Storage</button>
-                </div>
-            </div>
-
-            <div class="files-section">
-                <h3>Documents</h3>
-                <div id="files-grid" class="files-grid"></div>
-            </div>
-        </div>
+  <!-- CONTROL DASHBOARD -->
+  <div id="workspace-dashboard" class="container hidden">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h2>📁 Enterprise Repository Management</h2>
+      <div>
+        <span id="user-badge" style="font-weight:bold; margin-right:15px;"></span>
+        <button id="logout-btn" class="btn-danger">Disconnect</button>
+      </div>
     </div>
 
-    <script type="module" src="script.js"></script>
+    <!-- DOCUMENT UPLOAD COMPONENT -->
+    <div id="upload-panel" class="hidden" style="background: var(--light); padding: 20px; border-radius: 6px; margin: 20px 0;">
+      <h3>📤 Store New Document File</h3>
+      <input type="file" id="file-input">
+      <button id="upload-btn" class="btn-success">Process Upload</button>
+    </div>
+
+    <!-- MAIN REPOSITORY REGISTRY -->
+    <h3>Document Store</h3>
+    <table>
+      <thead>
+        <tr><th>Resource File Name</th><th>Stored By</th><th>Action</th></tr>
+      </thead>
+      <tbody id="file-list-body"></tbody>
+    </table>
+
+    <!-- ADMINISTRATIVE CONTROL LAYER (Hidden for regular viewers) -->
+    <div id="admin-panel" class="hidden" style="margin-top: 40px; border-top: 3px solid var(--dark); padding-top: 20px;">
+      <h3>👥 Security Operations Console</h3>
+      
+      <!-- ADD & SYNC NEW USER PROFILE -->
+      <form id="add-user-form" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 25px; padding: 15px; border: 1px solid #ddd; border-radius: 6px;">
+        <input type="text" id="new-username" placeholder="Target Username" required style="flex:1; padding:8px;">
+        <input type="password" id="new-password" placeholder="System Password" required style="flex:1; padding:8px;">
+        <select id="new-role" style="padding:8px;">
+          <option value="viewer">Viewer</option>
+          <option value="editor">Editor</option>
+          <option value="primary_owner">Primary Owner</option>
+        </select>
+        <button type="submit" class="btn-success">Add & Sync User</button>
+      </form>
+
+      <!-- PANELS FOR ACCOUNT ACTIVE DIRECTORY & EXPIRED ATTACKS -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div>
+          <h4>Active Directory Users</h4>
+          <div id="user-registry-container"></div>
+        </div>
+        <div>
+          <h4>⚠️ Security Incident Logs (Failed Logins)</h4>
+          <div id="failed-logs-container"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
