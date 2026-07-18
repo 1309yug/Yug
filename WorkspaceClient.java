@@ -7,7 +7,7 @@ import java.time.Duration;
 public class WorkspaceClient {
 
     // Target API endpoint updated to your live Google Apps Script web application
-    private static final String WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx9E312KyC2ncLZfGSU2SasbB8iUR8VWhsH1DtNa_8auqxx5POkpdKqzBh22AjgX6r1CQ/exec";
+    private static final String WEB_APP_URL = "https://script.google.com/macros/s/AKfycbylUaOnA4QeudP4cgmIhjPo9z-TnrL1dN8hSUm4mD5WxLbs1FVpDS6u0AdTaZSHwOwM9g/exec";
     
     private final HttpClient httpClient;
 
