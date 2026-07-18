@@ -25,18 +25,25 @@
     body { 
       font-family: sans-serif; 
       background: var(--bg-main); 
-      padding: 20px; 
+      padding: 15px; 
       color: var(--text-main); 
+      margin: 0;
+      /* Prevent text selection across the overall workspace application layout */
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
     }
     
     .container { 
       max-width: 950px; 
       margin: 0 auto; 
       background: var(--bg-surface); 
-      padding: 30px; 
+      padding: 20px; 
       border-radius: 8px; 
       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
       border: 1px solid var(--border);
+      box-sizing: border-box;
     }
     
     .hidden { display: none !important; }
@@ -45,16 +52,53 @@
       border-bottom: 2px solid var(--border); 
       padding-bottom: 8px; 
       color: var(--text-main);
+      margin-top: 20px;
+    }
+    
+    /* Responsive Header Layout */
+    .dashboard-header {
+      display: flex; 
+      flex-direction: column;
+      gap: 15px;
+      justify-content: space-between; 
+      align-items: flex-start;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 15px;
+    }
+    
+    @media (min-width: 768px) {
+      .dashboard-header {
+        flex-direction: row;
+        align-items: center;
+      }
+      body { padding: 30px 20px; }
+      .container { padding: 30px; }
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    @media (min-width: 768px) {
+      .header-controls {
+        width: auto;
+        justify-content: flex-end;
+      }
     }
     
     .login-box { 
       max-width: 400px; 
-      margin: 80px auto; 
-      padding: 30px; 
+      margin: 60px auto; 
+      padding: 25px; 
       background: var(--bg-surface); 
       border-radius: 8px; 
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4); 
       border: 1px solid var(--border);
+      box-sizing: border-box;
     }
     
     .form-group { margin-bottom: 15px; }
@@ -62,50 +106,126 @@
     
     .form-group input, .form-group select { 
       width: 100%; 
-      padding: 10px; 
+      padding: 12px; 
       background: var(--bg-main);
       color: var(--text-main);
       border: 1px solid var(--border); 
       border-radius: 4px; 
       box-sizing: border-box; 
+      font-size: 16px; /* Prevents auto-zoom scaling on iOS mobile viewports */
     }
     .form-group input:focus, .form-group select:focus {
       outline: none;
       border-color: var(--primary);
     }
     
+    /* Flexible Responsive Form Layout */
+    .responsive-form {
+      display: flex; 
+      flex-direction: column;
+      gap: 12px; 
+      margin-bottom: 25px; 
+      padding: 15px; 
+      background: var(--bg-main); 
+      border: 1px solid var(--border); 
+      border-radius: 6px;
+    }
+
+    .responsive-form input, .responsive-form select, .responsive-form button {
+      width: 100%;
+      padding: 12px;
+      box-sizing: border-box;
+      font-size: 15px;
+      background: var(--bg-surface);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+    }
+
+    @media (min-width: 768px) {
+      .responsive-form {
+        flex-direction: row;
+        align-items: center;
+      }
+      .responsive-form input { flex: 2; }
+      .responsive-form select { flex: 1; }
+      .responsive-form button { width: auto; padding: 12px 20px; }
+    }
+    
     button { 
       background: var(--primary); 
-      color: #0f172a; /* Dark text on light blue button for contrast legibility */
+      color: #0f172a; 
       font-weight: bold;
       border: none; 
-      padding: 10px 15px; 
+      padding: 12px 20px; 
       border-radius: 4px; 
       cursor: pointer; 
-      transition: background 0.2s ease;
+      transition: background 0.2s ease, transform 0.1s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
     }
+    button:active { transform: scale(0.98); }
     button:hover { opacity: 0.9; }
     button:disabled { background: #475569; color: #94a3b8; cursor: not-allowed; }
     
     .btn-danger { background: var(--danger); color: white; }
     .btn-success { background: var(--success); color: white; }
     
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    /* Responsive Table Wrap */
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-top: 15px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+
+    table { width: 100%; border-collapse: collapse; min-width: 500px; }
     th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
     th { background: var(--bg-main); color: var(--text-muted); }
     
-    a { color: var(--primary); text-decoration: none; }
+    a { color: var(--primary); text-decoration: none; -webkit-user-drag: none; }
     a:hover { text-decoration: underline; }
     
     .row-item { 
       display: flex; 
       justify-content: space-between; 
       align-items: center; 
-      padding: 10px; 
+      padding: 12px; 
       background: var(--bg-row); 
-      margin-bottom: 5px; 
+      margin-bottom: 8px; 
       border-radius: 4px; 
       border: 1px solid var(--border);
+      gap: 10px;
+    }
+
+    .row-item button {
+      padding: 8px 14px;
+      font-size: 13px;
+    }
+    
+    /* Grid system splitting panels */
+    .admin-grid {
+      display: grid; 
+      grid-template-columns: 1fr; 
+      gap: 20px;
+    }
+
+    @media (min-width: 768px) {
+      .admin-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    /* Keep code text inside input fields selectable for convenient copy-paste adjustments */
+    input[type="text"], input[type="password"] {
+      -webkit-user-select: text;
+      -moz-user-select: text;
+      -ms-user-select: text;
+      user-select: text;
     }
     
     small { color: var(--text-muted) !important; }
@@ -115,15 +235,15 @@
 
   <!-- AUTHENTICATION PORTAL -->
   <div id="login-portal" class="login-box">
-    <h2>🔐 Security System Login</h2>
+    <h2 style="margin-top:0;">🔐 Security System Login</h2>
     <form id="login-form">
       <div class="form-group">
         <label>Username</label>
-        <input type="text" id="username" required>
+        <input type="text" id="username" required autocomplete="username">
       </div>
       <div class="form-group">
         <label>Password</label>
-        <input type="password" id="password" required>
+        <input type="password" id="password" required autocomplete="current-password">
       </div>
       <button type="submit" style="width:100%;">Authenticate</button>
     </form>
@@ -131,50 +251,52 @@
 
   <!-- CONTROL DASHBOARD -->
   <div id="workspace-dashboard" class="container hidden">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-      <h2>📁 Enterprise Repository Management</h2>
-      <div>
-        <span id="user-badge" style="font-weight:bold; margin-right:15px;"></span>
+    <div class="dashboard-header">
+      <h2 style="margin:0; border:none; padding:0;">📁 Repository Management</h2>
+      <div class="header-controls">
+        <span id="user-badge" style="font-weight:bold;"></span>
         <button id="logout-btn" class="btn-danger">Disconnect</button>
       </div>
     </div>
 
     <!-- DOCUMENT UPLOAD COMPONENT -->
     <div id="upload-panel" class="hidden" style="background: var(--bg-surface); padding: 20px; border-radius: 6px; margin: 20px 0; border: 1px solid var(--border);">
-      <h3>📤 Store New Document File</h3>
-      <div class="form-group">
-        <input type="file" id="file-input">
+      <h3 style="margin-top:0;">📤 Store New Document File</h3>
+      <div class="form-group" style="margin-bottom: 15px;">
+        <input type="file" id="file-input" style="background:transparent; border:none; padding:0;">
       </div>
       <button id="upload-btn" class="btn-success">Process Upload</button>
     </div>
 
     <!-- MAIN REPOSITORY REGISTRY -->
     <h3>Document Store</h3>
-    <table>
-      <thead>
-        <tr><th>Resource File Name</th><th>Stored By</th><th>Action</th></tr>
-      </thead>
-      <tbody id="file-list-body"></tbody>
-    </table>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Resource File Name</th><th>Stored By</th><th>Action</th></tr>
+        </thead>
+        <tbody id="file-list-body"></tbody>
+      </table>
+    </div>
 
-    <!-- ADMINISTRATIVE CONTROL LAYER (Hidden for regular viewers) -->
+    <!-- ADMINISTRATIVE CONTROL LAYER -->
     <div id="admin-panel" class="hidden" style="margin-top: 40px; border-top: 3px solid var(--border); padding-top: 20px;">
       <h3>👥 Security Operations Console</h3>
       
-      <!-- ADD & SYNC NEW USER PROFILE -->
-      <form id="add-user-form" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 25px; padding: 15px; background: var(--bg-main); border: 1px solid var(--border); border-radius: 6px;">
-        <input type="text" id="new-username" placeholder="Target Username" required style="flex:1; padding:8px; background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border);">
-        <input type="password" id="new-password" placeholder="System Password" required style="flex:1; padding:8px; background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border);">
-        <select id="new-role" style="padding:8px; background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border);">
+      <!-- ADD & SYNC NEW USER PROFILE (Gatekeeped Option Fields) -->
+      <form id="add-user-form" class="responsive-form">
+        <input type="text" id="new-username" placeholder="Target Username" required>
+        <input type="password" id="new-password" placeholder="System Password" required>
+        <select id="new-role">
           <option value="viewer">Viewer</option>
           <option value="editor">Editor</option>
-          <option value="primary_owner">Primary Owner</option>
+          <!-- Primary Owner role removed from dropdown selection list for safety protection -->
         </select>
         <button type="submit" class="btn-success">Add & Sync User</button>
       </form>
 
       <!-- PANELS FOR ACCOUNT ACTIVE DIRECTORY & EXPIRED ATTACKS -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+      <div class="admin-grid">
         <div>
           <h4>Active Directory Users</h4>
           <div id="user-registry-container"></div>
