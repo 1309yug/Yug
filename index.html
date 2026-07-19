@@ -1,330 +1,508 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Yug Patel</title>
-  <style>
-    :root { 
-  /* Core Canvas & Surfaces */
-  --bg-main: #000000;       /* Pitch Black (Main body background) */
-  --bg-surface: #ffffff;    /* Pure White (Containers, tables, forms) */
-  --bg-row: #e2e8f0;        /* Light Slate Gray (Table headers, active item list rows) */
-  
-  /* Typography */
-  --text-main: #000000;     /* Pure Black (Headers and primary labels) */
-  --text-muted: #64748b;    /* Muted Slate Grey (Timestamps, secondary descriptions) */
-  
-  /* Interactive Accents & States */
-  --primary:  #2563eb;       /* Vibrant Electric Blue (Primary actions, active links) */
-  --success:  #10b981;       /* Vivid Emerald Green (Process Upload, Add User) */
-  --danger:   #dc2626;       /* Radiant Rose Red (Delete File, Clear Logs, Disconnect) */
-  --border:   #cbd5e1;       /* Clean Interface Separation Lines */
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Cloud Portal</title>
+    <style>
+        /* =========================================
+           GLOBAL CANVAS RESET & HIGH-END DARK METRICS
+           ========================================= */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
 
-    
-body { 
-  /* 
-    - 'Short Stack' looks like neat, uniform marker printing.
-    - 'Comfortaa' is perfectly round, smooth, and geometric.
-    - 'Delius' is a high-grade monoline handwriting font.
-  */
-  font-family: 'Short Stack', 'Comfortaa', 'Delius', cursive; 
-  background: var(--bg-main); 
-  padding: 15px; 
-  color: var(--text-main); 
-  margin: 0;
-  
-  /* Fix font weight to a solid, medium setting to keep it perfectly uniform */
-  font-weight: 500;
-  font-size: 1.1rem;
-  letter-spacing: 0.01em;
-  line-height: 1.5;
+        :root { 
+          --bg-main: #0b0f19;       
+          --bg-surface: #131c2e;    
+          --bg-row: #1e293b;        
+          --bg-input: #070a12;      
+          
+          --text-main: #f8fafc;     
+          --text-muted: #94a3b8;    
+          
+          --primary:  #3b82f6;       
+          --primary-hover: #2563eb; 
+          --success:  #10b981;       
+          --danger:   #ef4444;       
+          --border:   #243249;       
+        }
 
-  /* Prevent text selection across the overall workspace application layout */
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-    
+        body { 
+          background: var(--bg-main); 
+          padding: 15px; 
+          color: var(--text-main); 
+          font-weight: 400;
+          font-size: 1rem;
+          line-height: 1.5;
+          user-select: none;
+        }
 
-    
-    .container { 
-      max-width: 950px; 
-      margin: 0 auto; 
-      background: var(--bg-surface); 
-      padding: 20px; 
-      border-radius: 8px; 
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-      border: 1px solid var(--border);
-      box-sizing: border-box;
-    }
-    
-    .hidden { display: none !important; }
-    
-    h2, h3, h4 { 
-      border-bottom: 2px solid var(--border); 
-      padding-bottom: 8px; 
-      color: var(--text-main);
-      margin-top: 20px;
-    }
-    
-    /* Responsive Header Layout */
-    .dashboard-header {
-      display: flex; 
-      flex-direction: column;
-      gap: 15px;
-      justify-content: space-between; 
-      align-items: flex-start;
-      border-bottom: 2px solid var(--border);
-      padding-bottom: 15px;
-    }
-    
-    @media (min-width: 768px) {
-      .dashboard-header {
-        flex-direction: row;
-        align-items: center;
-      }
-      body { padding: 30px 20px; }
-      .container { padding: 30px; }
-    }
+        /* =========================================
+           CARDS & STRUCTURAL WRAPPERS
+           ========================================= */
+        .container { 
+          max-width: 950px; 
+          margin: 0 auto; 
+          background: var(--bg-surface); 
+          padding: 20px; 
+          border-radius: 12px; 
+          box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6);
+          border: 1px solid var(--border);
+        }
 
-    .header-controls {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      width: 100%;
-      justify-content: space-between;
-    }
+        .hidden { display: none !important; }
 
-    @media (min-width: 768px) {
-      .header-controls {
-        width: auto;
-        justify-content: flex-end;
-      }
-    }
-    
-    .login-box { 
-      max-width: 400px; 
-      margin: 60px auto; 
-      padding: 25px; 
-      background: var(--bg-surface); 
-      border-radius: 8px; 
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4); 
-      border: 1px solid var(--border);
-      box-sizing: border-box;
-    }
-    
-    .form-group { margin-bottom: 15px; }
-    .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: var(--text-muted); }
-    
-    .form-group input, .form-group select { 
-      width: 100%; 
-      padding: 12px; 
-      background: var(--bg-main);
-      color: var(--text-main);
-      border: 1px solid var(--border); 
-      border-radius: 4px; 
-      box-sizing: border-box; 
-      font-size: 16px; /* Prevents auto-zoom scaling on iOS mobile viewports */
-    }
-    .form-group input:focus, .form-group select:focus {
-      outline: none;
-      border-color: var(--primary);
-    }
-    
-    /* Flexible Responsive Form Layout */
-    .responsive-form {
-      display: flex; 
-      flex-direction: column;
-      gap: 12px; 
-      margin-bottom: 25px; 
-      padding: 15px; 
-      background: var(--bg-main); 
-      border: 1px solid var(--border); 
-      border-radius: 6px;
-    }
+        h2, h3, h4 { 
+          border-bottom: 1px solid var(--border); 
+          padding-bottom: 8px; 
+          color: var(--text-main);
+          margin-top: 20px;
+          font-weight: 600;
+        }
 
-    .responsive-form input, .responsive-form select, .responsive-form button {
-      width: 100%;
-      padding: 12px;
-      box-sizing: border-box;
-      font-size: 15px;
-      background: var(--bg-surface);
-      color: var(--text-main);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-    }
+        .dashboard-header {
+          display: flex; 
+          flex-direction: column;
+          gap: 15px;
+          justify-content: space-between; 
+          align-items: flex-start;
+          border-bottom: 1px solid var(--border);
+          padding-bottom: 15px;
+        }
 
-    @media (min-width: 768px) {
-      .responsive-form {
-        flex-direction: row;
-        align-items: center;
-      }
-      .responsive-form input { flex: 2; }
-      .responsive-form select { flex: 1; }
-      .responsive-form button { width: auto; padding: 12px 20px; }
-    }
-    
-    button { 
-      background: var(--primary); 
-      color: #0f172a; 
-      font-weight: bold;
-      border: none; 
-      padding: 12px 20px; 
-      border-radius: 4px; 
-      cursor: pointer; 
-      transition: background 0.2s ease, transform 0.1s ease;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      white-space: nowrap;
-    }
-    button:active { transform: scale(0.98); }
-    button:hover { opacity: 0.9; }
-    button:disabled { background: #475569; color: #94a3b8; cursor: not-allowed; }
-    
-    .btn-danger { background: var(--danger); color: white; }
-    .btn-success { background: var(--success); color: white; }
-    
-    /* Responsive Table Wrap */
-    .table-wrapper {
-      width: 100%;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      margin-top: 15px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-    }
+        @media (min-width: 768px) {
+          .dashboard-header {
+            flex-direction: row;
+            align-items: center;
+          }
+          body { padding: 30px 20px; }
+          .container { padding: 30px; }
+        }
 
-    table { width: 100%; border-collapse: collapse; min-width: 500px; }
-    th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
-    th { background: var(--bg-main); color: var(--text-muted); }
-    
-    a { color: var(--primary); text-decoration: none; -webkit-user-drag: none; }
-    a:hover { text-decoration: underline; }
-    
-    .row-item { 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-      padding: 12px; 
-      background: var(--bg-row); 
-      margin-bottom: 8px; 
-      border-radius: 4px; 
-      border: 1px solid var(--border);
-      gap: 10px;
-    }
+        .header-controls {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          width: 100%;
+          justify-content: space-between;
+        }
 
-    .row-item button {
-      padding: 8px 14px;
-      font-size: 13px;
-    }
-    
-    /* Grid system splitting panels */
-    .admin-grid {
-      display: grid; 
-      grid-template-columns: 1fr; 
-      gap: 20px;
-    }
+        @media (min-width: 768px) {
+          .header-controls {
+            width: auto;
+            justify-content: flex-end;
+          }
+        }
 
-    @media (min-width: 768px) {
-      .admin-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
+        /* =========================================
+           AUTHENTICATION CAPTURE GRID
+           ========================================= */
+        .login-box { 
+          max-width: 400px; 
+          margin: 60px auto; 
+          padding: 25px; 
+          background: var(--bg-surface); 
+          border-radius: 12px; 
+          box-shadow: 0 25px 40px -10px rgba(0, 0, 0, 0.7); 
+          border: 1px solid var(--border);
+        }
 
-    /* Keep code text inside input fields selectable for convenient copy-paste adjustments */
-    input[type="text"], input[type="password"] {
-      -webkit-user-select: text;
-      -moz-user-select: text;
-      -ms-user-select: text;
-      user-select: text;
-    }
-    
-    small { color: var(--text-muted) !important; }
-  </style>
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: var(--text-muted); font-size: 0.9rem; }
+
+        .form-group input, .form-group select { 
+          width: 100%; 
+          padding: 12px; 
+          background: var(--bg-input);
+          color: var(--text-main);
+          border: 1px solid var(--border); 
+          border-radius: 6px; 
+          font-size: 16px;
+          transition: border-color 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus {
+          outline: none;
+          border-color: var(--primary);
+        }
+
+        /* Inline Grid Form Control Layout */
+        .responsive-form {
+          display: flex; 
+          flex-direction: column;
+          gap: 12px; 
+          margin-bottom: 25px; 
+          padding: 15px; 
+          background: var(--bg-input); 
+          border: 1px solid var(--border); 
+          border-radius: 8px;
+        }
+
+        .responsive-form input, .responsive-form select, .responsive-form button {
+          width: 100%;
+          padding: 12px;
+          font-size: 15px;
+          background: var(--bg-surface);
+          color: var(--text-main);
+          border: 1px solid var(--border);
+          border-radius: 6px;
+        }
+
+        @media (min-width: 768px) {
+          .responsive-form {
+            flex-direction: row;
+            align-items: center;
+          }
+          .responsive-form input { flex: 2; }
+          .responsive-form select { flex: 1; }
+          .responsive-form button { width: auto; padding: 12px 20px; }
+        }
+
+        /* =========================================
+           INTERACTIVE WORKSPACE BUTTON DYNAMICS
+           ========================================= */
+        button { 
+          background: var(--primary); 
+          color: #ffffff; 
+          font-weight: 600;
+          border: none; 
+          padding: 12px 20px; 
+          border-radius: 6px; 
+          cursor: pointer; 
+          transition: background 0.2s ease, transform 0.1s ease, opacity 0.2s;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          white-space: nowrap;
+        }
+        button:hover { background: var(--primary-hover); }
+        button:active { transform: scale(0.98); }
+        button:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
+
+        .btn-danger { background: var(--danger); color: #ffffff; }
+        .btn-danger:hover { background: #dc2626; }
+
+        .btn-success { background: var(--success); color: #ffffff; }
+        .btn-success:hover { background: #059669; }
+
+        .btn-suspend { background: #f59e0b; color: #000000; }  
+        .btn-suspend:hover { background: #d97706; }
+        .btn-activate { background: var(--success); color: #ffffff; }
+
+        /* =========================================
+           DATA STORAGE & LIST TABLES
+           ========================================= */
+        .table-wrapper {
+          width: 100%;
+          overflow-x: auto;
+          margin-top: 15px;
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          background: var(--bg-input);
+        }
+
+        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        th, td { padding: 14px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { background: #111827; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        td { color: #e2e8f0; }
+
+        a { color: var(--primary); text-decoration: none; transition: color 0.2s; }
+        a:hover { color: #60a5fa; text-decoration: underline; }
+
+        .row-item { 
+          display: flex; 
+          justify-content: space-between; 
+          align-items: center; 
+          padding: 12px; 
+          background: var(--bg-row); 
+          margin-bottom: 8px; 
+          border-radius: 6px; 
+          border: 1px solid var(--border);
+          gap: 10px;
+        }
+
+        .row-item button { padding: 8px 14px; font-size: 13px; }
+
+        .admin-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        @media (min-width: 768px) {
+          .admin-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        input[type="text"], input[type="password"] { user-select: text; }
+        small { color: var(--text-muted) !important; }
+    </style>
 </head>
 <body>
 
-  <!-- AUTHENTICATION PORTAL -->
-  <div id="login-portal" class="login-box">
-    <h2 style="margin-top:0;">Hi, Yug </h2>
-    <form id="login-form">
-      <div class="form-group">
-        <label>Username</label>
-        <input type="text" id="username" required autocomplete="username">
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="password" required autocomplete="current-password">
-      </div>
-      <button type="submit" style="width:100%;">LOGIN</button>
-    </form>
-  </div>
-
-  <!-- CONTROL DASHBOARD -->
-  <div id="workspace-dashboard" class="container hidden">
-    <div class="dashboard-header">
-      <h2 style="margin:0; border:none; padding:0;">Yug Patel</h2>
-      <div class="header-controls">
-        <span id="user-badge" style="font-weight:bold;"></span>
-        <button id="logout-btn" class="btn-danger">Logout</button>
-      </div>
-    </div>
-
-    <!-- DOCUMENT UPLOAD COMPONENT -->
-    <div id="upload-panel" class="hidden" style="background: var(--bg-surface); padding: 20px; border-radius: 6px; margin: 20px 0; border: 1px solid var(--border);">
-      <h3 style="margin-top:0;"> Store New File</h3>
-      <div class="form-group" style="margin-bottom: 15px;">
-        <input type="file" id="file-input" style="background:transparent; border:none; padding:0;">
-      </div>
-      <button id="upload-btn" class="btn-success">Process Upload</button>
-    </div>
-
-    <!-- MAIN REPOSITORY REGISTRY -->
-    <h3>Document Store</h3>
-    <div class="table-wrapper">
-      <table>
-        <thead>
-          <tr><th>File Name</th><th>Stored By</th><th>Action</th></tr>
-        </thead>
-        <tbody id="file-list-body"></tbody>
-      </table>
-    </div>
-
-    <!-- ADMINISTRATIVE CONTROL LAYER -->
-    <div id="admin-panel" class="hidden" style="margin-top: 40px; border-top: 3px solid var(--border); padding-top: 20px;">
-      <h3>Security Console</h3>
-      
-      <!-- ADD & SYNC NEW USER PROFILE (Gatekeeped Option Fields) -->
-      <form id="add-user-form" class="responsive-form">
-        <input type="text" id="new-username" placeholder="Target Username" required>
-        <input type="password" id="new-password" placeholder="System Password" required>
-        <select id="new-role">
-          <option value="viewer">Viewer</option>
-          <option value="editor">Editor</option>
-          <!-- Primary Owner role removed from dropdown selection list for safety protection -->
-        </select>
-        <button type="submit" class="btn btn-primary">Add User</button>
-    
-        </form>
-
-      <!-- PANELS FOR ACCOUNT ACTIVE DIRECTORY & EXPIRED ATTACKS -->
-      <div class="admin-grid">
-        <div>
-          <h4>Users Directory</h4>
-          <div id="user-registry-container"></div>
+    <!-- GATEWAY AUTH SCREEN -->
+    <div id="loginPortal" class="login-box">
+        <h2>System Authentication</h2>
+        <div style="margin-bottom: 15px; color: var(--danger);" id="authErrorMsg" class="hidden"></div>
+        <div class="form-group">
+            <label for="usernameInput">Account Username</label>
+            <input type="text" id="usernameInput" placeholder="Enter identity">
         </div>
-        <div>
-          <h4>⚠️ Failed Logins ⚠️</h4>
-          <div id="failed-logs-container"></div>
+        <div class="form-group">
+            <label for="passwordInput">Secret Key Phrase</label>
+            <input type="password" id="passwordInput" placeholder="••••••••">
         </div>
-      </div>
+        <button style="width: 100%;" id="loginSubmitBtn" onclick="handlePortalAuth()">Establish Session</button>
     </div>
-  </div>
 
-  <script src="script.js"></script>
-</body>
-</html>
+    <!-- MAIN SYSTEM ENVIRONMENT -->
+    <div id="mainWorkspace" class="container hidden">
+        <div class="dashboard-header">
+            <div>
+                <h2 style="margin-top:0; border:none; padding:0;" id="userGreeting">Loading Workspace...</h2>
+                <small id="userMetaProfile">Session Status: Active</small>
+            </div>
+            <div class="header-controls">
+                <button class="btn-danger" onclick="terminateSession()">Disconnect</button>
+            </div>
+        </div>
+
+        <!-- SHARED REPOSITORY CONTAINER (Visible to both Users and Admins) -->
+        <div id="sharedRepositorySection">
+            <h3>Cloud File Storage Archive</h3>
+            
+            <!-- UPLOADER COMPONENT: Hidden dynamically from non-write personnel if needed -->
+            <div id="uploadFormElement" class="responsive-form">
+                <input type="text" id="fileTitleInput" placeholder="Assign Document Title/Name">
+                <input type="text" id="fileUrlInput" placeholder="Paste Direct Resource URL (HTTPS)">
+                <button class="btn-success" id="fileSubmitBtn" onclick="dispatchFileUpload()">Upload Resource</button>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Document Title</th>
+                            <th>Resource Path</th>
+                            <th>Action Authority</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cloudFileGridBody">
+                        <!-- Dynamic Records -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- BALANCED ADMIN CONSOLE GRID -->
+        <div id="privilegedAdministrativeSuite" class="admin-grid hidden">
+            <!-- Left Grid: User Registration Control -->
+            <div>
+                <h3>Create Operator Profile</h3>
+                <div class="responsive-form" style="display: flex; flex-direction: column;">
+                    <input type="text" id="newUsername" placeholder="Assign Unique Username">
+                    <input type="password" id="newPassword" placeholder="Assign Account Password">
+                    <select id="newUserRole">
+                        <option value="user">Standard User (Read-Only)</option>
+                        <option value="admin">System Administrator</option>
+                    </select>
+                    <button class="btn-success" onclick="commitNewUser()">Provision Profile</button>
+                </div>
+            </div>
+
+            <!-- Right Grid: Live System User Directory -->
+            <div>
+                <h3>Identity Management Registry</h3>
+                <div id="userRegistryContainer" style="margin-top: 15px;">
+                    <!-- Async User Items loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // TARGET DEPLOYED APPS SCRIPT WEB APP URL
+        const GOOGLE_DRIVE_BRIDGE_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEBAPP_URL_HERE";
+
+        let currentActiveUser = null;
+        let currentActiveRole = null;
+
+        async function handlePortalAuth() {
+            const u = document.getElementById("usernameInput").value.trim();
+            const p = document.getElementById("passwordInput").value.trim();
+            const err = document.getElementById("authErrorMsg");
+            const btn = document.getElementById("loginSubmitBtn");
+
+            if(!u || !p) {
+                err.textContent = "All credentials parameters required.";
+                err.classList.remove("hidden");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = "Verifying Identity Matrix...";
+            err.classList.add("hidden");
+
+            try {
+                const res = await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "login", username: u, password: p })
+                });
+                const data = await res.json();
+
+                if (data.status === "success") {
+                    currentActiveUser = u;
+                    currentActiveRole = data.role;
+                    initializeWorkspaceEnvironment();
+                } else {
+                    err.textContent = data.message || "Authentication rejected.";
+                    err.classList.remove("hidden");
+                    btn.disabled = false;
+                    btn.textContent = "Establish Session";
+                }
+            } catch (e) {
+                err.textContent = "Unable to reach verification gateway server.";
+                err.classList.remove("hidden");
+                btn.disabled = false;
+                btn.textContent = "Establish Session";
+            }
+        }
+
+        function initializeWorkspaceEnvironment() {
+            document.getElementById("loginPortal").classList.add("hidden");
+            document.getElementById("mainWorkspace").classList.remove("hidden");
+            
+            document.getElementById("userGreeting").textContent = `Operator: ${currentActiveUser}`;
+            document.getElementById("userMetaProfile").textContent = `Access Clearances: ${currentActiveRole.toUpperCase()}`;
+
+            if(currentActiveRole === "admin") {
+                document.getElementById("privilegedAdministrativeSuite").classList.remove("hidden");
+                syncUsersLive();
+            } else {
+                document.getElementById("privilegedAdministrativeSuite").classList.add("hidden");
+            }
+
+            syncCloudStorageGrid();
+        }
+
+        function terminateSession() {
+            currentActiveUser = null;
+            currentActiveRole = null;
+            document.getElementById("usernameInput").value = "";
+            document.getElementById("passwordInput").value = "";
+            document.getElementById("loginSubmitBtn").disabled = false;
+            document.getElementById("loginSubmitBtn").textContent = "Establish Session";
+            document.getElementById("mainWorkspace").classList.add("hidden");
+            document.getElementById("loginPortal").classList.remove("hidden");
+        }
+
+        async function syncCloudStorageGrid() {
+            const tbody = document.getElementById("cloudFileGridBody");
+            tbody.innerHTML = "<tr><td colspan='3'>Querying cloud repository arrays...</td></tr>";
+
+            try {
+                const res = await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "getFiles" })
+                });
+                const data = await res.json();
+
+                if(data.status === "success") {
+                    tbody.innerHTML = "";
+                    if(data.files.length === 0) {
+                        tbody.innerHTML = "<tr><td colspan='3'>No assets archived in current database row block.</td></tr>";
+                        return;
+                    }
+                    data.files.forEach(f => {
+                        const tr = document.createElement("tr");
+                        
+                        // Show delete authority for Admins
+                        const contextAction = currentActiveRole === 'admin' 
+                            ? `<button class="btn-danger" style="padding: 6px 12px; font-size:12px;" onclick="purgeCloudFile('${f.id}')">Purge</button>` 
+                            : `<small style="color:var(--text-muted)">Read-Only Control</small>`;
+
+                        tr.innerHTML = `
+                            <td><strong>${f.title}</strong></td>
+                            <td><a href="${f.url}" target="_blank">Access Link &nearr;</a></td>
+                            <td>${contextAction}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (e) {
+                tbody.innerHTML = "<tr><td colspan='3' style='color:var(--danger);'>File Sync Outage Detected.</td></tr>";
+            }
+        }
+
+        async function dispatchFileUpload() {
+            const title = document.getElementById("fileTitleInput").value.trim();
+            const url = document.getElementById("fileUrlInput").value.trim();
+            const btn = document.getElementById("fileSubmitBtn");
+
+            if(!title || !url) {
+                alert("Both title name and asset destination path coordinates are mandatory.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = "Writing Block...";
+
+            try {
+                const res = await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "addFile", title: title, url: url })
+                });
+                const data = await res.json();
+                if(data.status === "success") {
+                    document.getElementById("fileTitleInput").value = "";
+                    document.getElementById("fileUrlInput").value = "";
+                    syncCloudStorageGrid();
+                } else {
+                    alert(data.message);
+                }
+            } catch (e) {
+                alert("Transaction timeout error.");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Upload Resource";
+            }
+        }
+
+        async function purgeCloudFile(fileId) {
+            if(!confirm("Purge asset entirely from database architecture logs?")) return;
+            try {
+                const res = await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "deleteFile", id: fileId })
+                });
+                const data = await res.json();
+                if(data.status === "success") {
+                    syncCloudStorageGrid();
+                }
+            } catch (e) {
+                alert("Purge sequence failure.");
+            }
+        }
+
+        async function syncUsersLive() {
+            const userRegistryContainer = document.getElementById("userRegistryContainer");
+            userRegistryContainer.innerHTML = "<p>Reading cloud profiles...</p>";
+            try {
+                const res = await fetch(GOOGLE_DRIVE_BRIDGE_URL, { method: "POST", body: JSON.stringify({ action: "getUsers" }) });
+                const data = await res.json();
+                if (data.status === "success") {
+                    userRegistryContainer.innerHTML = "";
+                    data.users.forEach(u => {
+                        if(u.username === currentActiveUser) return; // Skip operating self
+
+                        const d = document.createElement("div"); 
+                        d.className = "row-item";
+                        
+                        const isSuspended = u.status === "suspended";
+                        const nextStatus = isSuspended ? "active" : "suspended";
+                        const buttonText = isSuspended ? "Activate" : "Suspend";
+                        const buttonClass = isSuspended ? "btn-activate" : "btn-suspend";
+                        
+                        d.innerHTML = `<span><strong>${u.username}</strong> (${u.role.toUpperCase()})</span>
+                                       <button class="${buttonClass}" onclick="toggleUserStatus('${u.username}', '${nextStatus}')">${buttonText}</button>`;
+                        userRegistryContainer.appendChild(d);
+                    });
+                }
+            } catc
