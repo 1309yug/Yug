@@ -1,7 +1,7 @@
 // =========================================
 // 1. CONFIGURATION (INTEGRATED LIVE URL)
 // =========================================
-const GOOGLE_DRIVE_BRIDGE_URL = "https://script.google.com/macros/s/AKfycbzCkSO-_4c70nWmleSuLLz0L_xQYmfpmkGv8NBjYRsTqrWcbjy-nRZKxdyiypuS9iFk8A/exec";
+const GOOGLE_DRIVE_BRIDGE_URL = "https://script.google.com/macros/s/AKfycbwWPma3WpRlHfnTqSPkzHDGOg0hjcJWvdnCSMC2qekICEE0tqsCff0T6QhWMEk-6yenRw/exec";
 
 // Global Session States
 let currentUserProfile = null;
