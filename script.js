@@ -386,12 +386,12 @@ async function syncFilesLive() {
                 card.className = "file-card";
                 card.style = `animation: itemPopIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1) backwards; animation-delay: ${index * 0.04}s;`;
                 card.innerHTML = `
-                    <span class="file-icon">☁️</span>
+                    <span class="file-icon">📁</span>
                     <h4>${file.name}</h4>
                     <p class="user-meta">By: ${file.by}</p>
                     <div class="file-actions-row" style="display:flex; gap:8px;">
-                        <a href="${file.url}" target="_blank" class="file-action" style="flex:1; text-align:center;">Fetch</a>
-                        <button class="file-action delete-file-btn" data-url="${file.url}" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:6px 12px; cursor:pointer;">Purge</button>
+                        <a href="${file.url}" target="_blank" class="file-action" style="flex:1; text-align:center;">Download</a>
+                        <button class="file-action delete-file-btn" data-url="${file.url}" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:6px 12px; cursor:pointer;">Delete</button>
                     </div>
                 `;
                 filesGrid.appendChild(card);
