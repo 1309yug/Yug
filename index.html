@@ -3,30 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yug Patel</title>
+    <title>Storage Dashboard</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
+        <!-- LOGIN SCREEN -->
         <div id="login-screen" class="card">
             <div id="greeting-box">
                 <h2 id="greeting-text">Hi, Yug</h2>
                 <div id="greeting-spinner" class="spinner hidden"></div>
             </div>
-            <p class="subtitle">🔒</p>
+            <p class="subtitle">🔒 Secure Portal</p>
             
-            <form id="login-form" autocomplete="off">
+            <form id="login-form" autocomplete="on">
                 <div class="input-group">
-                    <input type="text" id="email-input" placeholder="Username or Email" required>
+                    <input type="text" id="email-input" name="username" placeholder="Username or Email" autocomplete="username" required>
                 </div>
                 <div class="input-group">
-                    <input type="password" id="password-input" placeholder="Password" required>
+                    <input type="password" id="password-input" name="password" placeholder="Password" autocomplete="current-password" required>
                 </div>
                 <button type="submit" class="btn">Login</button>
                 <p id="error-msg" class="error-msg"></p>
             </form>
         </div>
 
+        <!-- DASHBOARD SCREEN -->
         <div id="dashboard-screen" class="card hidden">
             <div class="dashboard-header">
                 <div>
@@ -36,13 +38,14 @@
                 <button id="logout-btn" class="btn btn-secondary">Logout</button>
             </div>
 
+            <!-- ADMIN CONTROL PANEL -->
             <div id="admin-section" class="admin-section hidden">
                 <h3>User & Role Management</h3>
                 <p class="section-desc">User Directory</p>
                 
                 <form id="create-user-form" class="admin-form" autocomplete="off">
                     <input type="text" id="new-username" placeholder="New Username" required>
-                    <input type="text" id="new-email" placeholder="Email (user@portal.local)" required>
+                    <input type="text" id="new-email" placeholder="Email (optional)">
                     <input type="password" id="new-password" placeholder="Password" required>
                     <select id="new-role">
                         <option value="owner">Co-Owner</option>
@@ -54,16 +57,18 @@
                 <div id="user-list-container" class="control-grid"></div>
             </div>
 
+            <!-- UPLOAD SECTION -->
             <div id="upload-section" class="upload-zone">
-                <h3>Upload New Document </h3>
+                <h3>Upload New Document</h3>
                 <div class="upload-container-block">
                     <input type="file" id="file-chooser">
-                    <button id="upload-btn" class="btn">📤</button>
+                    <button id="upload-btn" class="btn">Upload to Cloud 📤</button>
                 </div>
             </div>
 
+            <!-- FILES LIST SECTION -->
             <div class="files-section">
-                <h3>Cloud  Documents</h3>
+                <h3>Cloud Documents</h3>
                 <div id="files-grid" class="files-grid"></div>
             </div>
         </div>
@@ -72,4 +77,3 @@
     <script type="module" src="script.js"></script>
 </body>
 </html>
-
