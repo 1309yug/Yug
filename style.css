@@ -61,7 +61,7 @@ body {
 }
 
 /* =========================================
-   DYNAMIC LOGIN HEADER (HI, YUG & SPINNER)
+   DYNAMIC LOGIN HEADER (GREETING & SPINNER)
    ========================================= */
 #greeting-box {
     display: flex;
@@ -126,7 +126,7 @@ input:focus, select:focus {
 }
 
 /* =========================================
-   BUTTONS (The UI you liked)
+   BUTTONS
    ========================================= */
 .btn {
     width: 100%;
@@ -215,9 +215,10 @@ input:focus, select:focus {
     margin-bottom: 1rem;
 }
 
+/* Grid layout supporting 5 elements (Username, Email, Password, Role, Submit) */
 .admin-form {
     display: grid;
-    grid-template-columns: 1fr 1fr auto auto;
+    grid-template-columns: 1fr 1fr 1fr 120px auto;
     gap: 10px;
     margin-bottom: 1rem;
 }
@@ -240,7 +241,7 @@ input:focus, select:focus {
 }
 
 /* =========================================
-   FILE UPLOAD BLOCK (Repositioned layout)
+   FILE UPLOAD BLOCK
    ========================================= */
 .upload-zone {
     background-color: rgba(59, 130, 246, 0.05);
@@ -282,7 +283,7 @@ input:focus, select:focus {
 }
 
 /* =========================================
-   FILES GRID
+   FILES GRID & FILE CARDS
    ========================================= */
 .files-section h3 {
     margin-bottom: 1rem;
@@ -300,6 +301,9 @@ input:focus, select:focus {
     border-radius: 8px;
     padding: 1.5rem 1rem;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
     transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
@@ -316,10 +320,17 @@ input:focus, select:focus {
 
 .file-card h4 {
     font-size: 0.95rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.4rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.file-meta-info {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin: 4px 0 12px 0;
+    font-weight: 500;
 }
 
 .file-actions-row {
@@ -357,7 +368,7 @@ input:focus, select:focus {
 /* =========================================
    MOBILE RESPONSIVENESS
    ========================================= */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     .admin-form {
         grid-template-columns: 1fr;
     }
