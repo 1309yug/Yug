@@ -1,111 +1,41 @@
 // =========================================
-// 1. CONFIGURATION (INTEGRATED LIVE URL)
+// 1. CONFIGURATION & STATE
 // =========================================
-const GOOGLE_DRIVE_BRIDGE_URL = "https://script.google.com/macros/s/AKfycbwWPma3WpRlHfnTqSPkzHDGOg0hjcJWvdnCSMC2qekICEE0tqsCff0T6QhWMEk-6yenRw/exec";
+const GOOGLE_DRIVE_BRIDGE_URL = "https://script.google.com/macros/s/AKfycbzbfU_RfkRgGfwL5nYbO3StQw1B8gRkGBW_uUv5C3SLXwCX231Q-xBQLMQpm2pcoAoMDQ/exec";
 
-// Global Session States
 let currentUserProfile = null;
 
-// Apply global CSS rules, custom transitions, animations, and non-selection layers programmatically
+// Apply non-selection and micro-animations dynamically
 const styleBlock = document.createElement("style");
 styleBlock.textContent = `
-  /* --- 1. Prevent Text Selection --- */
   body, html, .card, .control-item, .file-card, h2, h3, h4, p, span, button {
     -webkit-user-select: none;
-    -ms-user-select: none;
     user-select: none;
   }
   input, textarea, select {
     -webkit-user-select: text;
-    -ms-user-select: text;
     user-select: text;
   }
 
-  /* --- 2. Screen Handoff Animations (Fade & Slide Up) --- */
-  #login-screen, #dashboard-screen {
-    opacity: 0;
-    transform: translateY(15px);
-    animation: screenEntrance 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-    transition: opacity 0.4s ease, transform 0.4s ease;
+  .file-meta-info {
+    font-size: 0.75rem;
+    color: var(--text-muted, #94a3b8);
+    margin: 4px 0 10px 0;
   }
 
-  @keyframes screenEntrance {
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  /* Utility class to handle hidden states cleanly */
-  .hidden {
-    display: none !important;
-    opacity: 0 !important;
-  }
-
-  /* --- 3. Interactive Component Micro-animations --- */
   .file-card {
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
-                box-shadow 0.3s ease, 
-                border-color 0.3s ease;
-    will-change: transform, box-shadow;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
   }
 
-  /* Elevate file cards slightly on user interaction */
-  .file-card:hover, .file-card:active {
-    transform: translateY(-6px) scale(1.02);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.12);
-    border-color: #3498db;
-  }
-
-  /* Button bounce effects */
-  button, .file-action {
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
-  }
-
-  button:active, .file-action:active {
-    transform: scale(0.95);
-    filter: brightness(0.9);
-  }
-
-  /* Smooth list items loading in sequence */
-  .control-item {
-    transition: background-color 0.2s ease, transform 0.2s ease;
-    animation: itemPopIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
-  }
-  
-  .control-item:hover {
-    background-color: #fcfcfc;
-    transform: scale(1.005);
-  }
-
-  @keyframes itemPopIn {
-    0% {
-      opacity: 0;
-      transform: scale(0.96) translateY(5px);
-    }
-    100% {
-      opacity: 1;
-      transform: scale(1) translateY(0);
-    }
-  }
-
-  /* --- 4. Loading State Animations --- */
-  .spinner-pulse {
-    display: inline-block;
-    animation: subtlePulse 1.4s infinite ease-in-out;
-  }
-
-  @keyframes subtlePulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(0.92); opacity: 0.6; }
+  .file-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent, #3b82f6);
   }
 `;
 document.head.appendChild(styleBlock);
 
 // =========================================
-// 2. DOM ELEMENT SELECTORS
+// 2. DOM SELECTORS
 // =========================================
 const loginScreen = document.getElementById("login-screen");
 const dashboardScreen = document.getElementById("dashboard-screen");
@@ -120,11 +50,11 @@ const logoutBtn = document.getElementById("logout-btn");
 const userDisplayName = document.getElementById("user-display-name");
 const userRoleBadge = document.getElementById("user-role-badge");
 
-// Administrative Control Panel Selectors
 const adminSection = document.getElementById("admin-section");
 const createUserForm = document.getElementById("create-user-form");
 const newUsername = document.getElementById("new-username");
 const newEmail = document.getElementById("new-email"); 
+const newPassword = document.getElementById("new-password");
 const newRole = document.getElementById("new-role");
 const userListContainer = document.getElementById("user-list-container");
 
@@ -133,7 +63,7 @@ const uploadBtn = document.getElementById("upload-btn");
 const filesGrid = document.getElementById("files-grid");
 
 // =========================================
-// 3. SECURE SHEET AUTHENTICATION ENGINE
+// 3. AUTHENTICATION
 // =========================================
 if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
@@ -169,7 +99,7 @@ if (loginForm) {
             }
         } catch (err) {
             resetLoginUI();
-            if (errorMsg) errorMsg.textContent = "Network error. Ensure Web App is deployed as 'Anyone'.";
+            if (errorMsg) errorMsg.textContent = "Network error. Check connection or script deployment.";
         }
     });
 }
@@ -196,7 +126,7 @@ function setupDashboardUI() {
     if (userRoleBadge) userRoleBadge.textContent = currentUserProfile.role.toUpperCase().replace("_", " ");
     
     if (adminSection) {
-        if (currentUserProfile.role === "primary_owner") {
+        if (currentUserProfile.role === "primary_owner" || currentUserProfile.role === "owner") {
             adminSection.classList.remove("hidden");
             syncUsersLive();
         } else {
@@ -207,11 +137,11 @@ function setupDashboardUI() {
 }
 
 // =========================================
-// 4. LIVE WEB MANAGEMENT METHODS (OWNER MODE)
+// 4. USER MANAGEMENT (ADMIN PANEL)
 // =========================================
 async function syncUsersLive() {
     if (!userListContainer) return;
-    userListContainer.innerHTML = "<p style='color:gray;' class='spinner-pulse'>Refreshing user directory...</p>";
+    userListContainer.innerHTML = "<p style='color:gray;'>Refreshing user directory...</p>";
 
     try {
         const response = await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
@@ -222,10 +152,9 @@ async function syncUsersLive() {
 
         if (result.status === "success") {
             userListContainer.innerHTML = "";
-            result.users.forEach((user, index) => {
+            result.users.forEach((user) => {
                 const div = document.createElement("div");
                 div.className = "control-item";
-                div.style = `display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 10px 0; animation-delay: ${index * 0.05}s;`;
                 
                 const isOwner = user.role === "primary_owner";
                 const isSuspended = user.status === "suspended";
@@ -240,8 +169,8 @@ async function syncUsersLive() {
                 let actionBtnHTML = "";
                 if (!isOwner) {
                     actionBtnHTML = isSuspended 
-                        ? `<button class="btn btn-sm status-toggle-btn" data-user="${user.username}" data-action="active" style="background:green; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Activate</button>` 
-                        : `<button class="btn btn-sm status-toggle-btn" data-user="${user.username}" data-action="suspended" style="background:red; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Suspend</button>`;
+                        ? `<button class="btn btn-sm status-toggle-btn" data-user="${user.username}" data-action="active" style="background:#22c55e; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Activate</button>` 
+                        : `<button class="btn btn-sm status-toggle-btn" data-user="${user.username}" data-action="suspended" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Suspend</button>`;
                 } else {
                     actionBtnHTML = `<span style="color:gray; font-size:12px; font-weight:bold;">Protected Master</span>`;
                 }
@@ -250,7 +179,7 @@ async function syncUsersLive() {
                     <div>
                         <strong>${user.username}</strong> 
                         <span style="font-size:11px; margin-left:8px; padding:3px 8px; border-radius:4px; ${badgeStyle}">${user.role.toUpperCase()}</span>
-                        <span style="font-size:12px; margin-left:5px; color:${isSuspended ? '#ff4d4d':'#2ecc71'}; font-weight:bold;">(${user.status})</span>
+                        <span style="font-size:12px; margin-left:5px; color:${isSuspended ? '#ef4444':'#22c55e'}; font-weight:bold;">(${user.status})</span>
                     </div>
                     <div>${actionBtnHTML}</div>
                 `;
@@ -280,7 +209,7 @@ async function syncUsersLive() {
             });
         }
     } catch (err) {
-        userListContainer.innerHTML = "<p style='color:red;'>Failed to dynamically sync user directories.</p>";
+        userListContainer.innerHTML = "<p style='color:#ef4444;'>Failed to sync user directory.</p>";
     }
 }
 
@@ -289,7 +218,7 @@ if (createUserForm) {
         e.preventDefault();
         
         const username = newUsername.value.trim();
-        const password = newEmail.value || "12345"; 
+        const password = (newPassword && newPassword.value) ? newPassword.value : (newEmail.value || "12345"); 
         const role = newRole.value;
 
         const submitBtn = createUserForm.querySelector("button[type='submit']");
@@ -304,14 +233,14 @@ if (createUserForm) {
             const result = await response.json();
 
             if (result.status === "success") {
-                alert(`Account structure for "${username}" successfully saved to your spreadsheet!`);
+                alert(`Account for "${username}" created!`);
                 createUserForm.reset();
                 syncUsersLive();
             } else {
                 alert("Creation Failed: " + result.message);
             }
         } catch (err) {
-            alert("Network routing handoff error during user creation.");
+            alert("Network error during user creation.");
         } finally {
             submitBtn.disabled = false;
             submitBtn.textContent = "Create User";
@@ -320,7 +249,7 @@ if (createUserForm) {
 }
 
 // =========================================
-// 5. DIRECT GOOGLE DRIVE FILE STREAMER & PERSISTENT REMOVAL
+// 5. FILE UPLOAD & DRIVE DELETION ENGINE
 // =========================================
 if (uploadBtn) {
     uploadBtn.addEventListener("click", () => {
@@ -328,7 +257,7 @@ if (uploadBtn) {
         if (!file) return alert("Select a file first.");
 
         uploadBtn.disabled = true;
-        uploadBtn.textContent = "Streaming to Drive...";
+        uploadBtn.textContent = "Uploading...";
 
         const reader = new FileReader();
         reader.onload = async function (e) {
@@ -346,13 +275,13 @@ if (uploadBtn) {
 
                 if (result.status === "success") {
                     fileChooser.value = "";
-                    alert("File successfully saved directly to your Google Drive and Spreadsheet registry!");
+                    alert("File successfully saved to Google Drive!");
                     syncFilesLive(); 
                 } else {
-                    alert("Storage Write Rejected: " + result.message);
+                    alert("Upload Rejected: " + result.message);
                 }
             } catch (err) {
-                alert("Upload tracking failure.");
+                alert("Upload failure. Check your connection.");
             } finally {
                 uploadBtn.disabled = false;
                 uploadBtn.textContent = "Upload to Cloud";
@@ -362,9 +291,42 @@ if (uploadBtn) {
     });
 }
 
+// Utility: Map MimeType or Filename extension to an Icon
+function getFileIcon(filename, mimeType) {
+    if (mimeType) {
+        if (mimeType.includes("pdf")) return "📄";
+        if (mimeType.includes("image")) return "🖼️";
+        if (mimeType.includes("video")) return "🎬";
+        if (mimeType.includes("audio")) return "🎵";
+        if (mimeType.includes("zip") || mimeType.includes("compressed")) return "📦";
+        if (mimeType.includes("spreadsheet") || mimeType.includes("excel")) return "📊";
+    }
+    
+    const ext = filename.split('.').pop().toLowerCase();
+    switch (ext) {
+        case 'pdf': return '📄';
+        case 'png': case 'jpg': case 'jpeg': case 'webp': return '🖼️';
+        case 'mp4': case 'mov': case 'avi': return '🎬';
+        case 'mp3': case 'wav': return '🎵';
+        case 'zip': case 'rar': case '7z': return '📦';
+        case 'xls': case 'xlsx': case 'csv': return '📊';
+        case 'doc': case 'docx': return '📝';
+        default: return '📁';
+    }
+}
+
+// Utility: Format raw bytes into readable string
+function formatBytes(bytes) {
+    if (!bytes || bytes === 0) return "Unknown size";
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
 async function syncFilesLive() {
     if (!filesGrid) return;
-    filesGrid.innerHTML = "<div style='grid-column: 1/-1; text-align: center; color: gray;' class='spinner-pulse'>Loading secure file assets...</div>";
+    filesGrid.innerHTML = "<div style='grid-column: 1/-1; text-align: center; color: gray;'>Loading cloud documents...</div>";
 
     try {
         const response = await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
@@ -381,17 +343,21 @@ async function syncFilesLive() {
                 return;
             }
 
-            result.files.forEach((file, index) => {
+            result.files.forEach((file) => {
                 const card = document.createElement("div");
                 card.className = "file-card";
-                card.style = `animation: itemPopIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1) backwards; animation-delay: ${index * 0.04}s;`;
+                
+                const icon = getFileIcon(file.name, file.mimeType);
+                const sizeStr = formatBytes(file.size);
+                
                 card.innerHTML = `
-                    <span class="file-icon">📁</span>
-                    <h4>${file.name}</h4>
+                    <span class="file-icon" style="font-size:2.5rem; display:block; margin-bottom:8px;">${icon}</span>
+                    <h4 title="${file.name}">${file.name}</h4>
                     <p class="user-meta">By: ${file.by}</p>
+                    <div class="file-meta-info">${sizeStr} ${file.date ? '• ' + file.date : ''}</div>
                     <div class="file-actions-row" style="display:flex; gap:8px;">
-                        <a href="${file.url}" target="_blank" class="file-action" style="flex:1; text-align:center;">📥</a>
-                        <button class="file-action delete-file-btn" data-url="${file.url}" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:6px 12px; cursor:pointer;">❌</button>
+                        <a href="${file.url}" target="_blank" class="file-action" style="flex:1; text-align:center;">📥 Open</a>
+                        <button class="file-action delete-file-btn" data-id="${file.id}" data-url="${file.url}" style="background:#ef4444; color:white; border:none; border-radius:4px; padding:6px 12px; cursor:pointer;">❌</button>
                     </div>
                 `;
                 filesGrid.appendChild(card);
@@ -399,14 +365,20 @@ async function syncFilesLive() {
 
             document.querySelectorAll(".delete-file-btn").forEach(btn => {
                 btn.addEventListener("click", async (e) => {
+                    const fileId = e.currentTarget.dataset.id;
                     const fileUrl = e.currentTarget.dataset.url;
-                    if (confirm("Permanently remove this document row reference from the cloud database?")) {
+                    
+                    if (confirm("Permanently remove this document from Google Drive and database?")) {
                         e.currentTarget.disabled = true;
                         e.currentTarget.textContent = "...";
                         
                         const deleteRes = await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
                             method: "POST",
-                            body: JSON.stringify({ action: "deleteFile", url: fileUrl })
+                            body: JSON.stringify({ 
+                                action: "deleteFile", 
+                                fileId: fileId, 
+                                url: fileUrl 
+                            })
                         });
                         const deleteResult = await deleteRes.json();
                         
@@ -420,6 +392,6 @@ async function syncFilesLive() {
             });
         }
     } catch (err) {
-        filesGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: red;">Failed to retrieve files from sheet registry.</div>`;
+        filesGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #ef4444;">Failed to retrieve files from sheet registry.</div>`;
     }
 }
