@@ -1,28 +1,29 @@
 /* =========================================
-   GLOBAL RESET & TYPOGRAPHY
+   MATRIX / COMMAND PROMPT THEME
    ========================================= */
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap');
+
+:root {
+    --bg-main: #050805;
+    --bg-card: #0a0f0d;
+    --bg-input: #020402;
+    --text-main: #00ff66;       /* Matrix Terminal Green */
+    --text-muted: #00993d;
+    --border-color: #00ff6644;
+    --accent: #00ff66;
+    --accent-hover: #00cc52;
+    --danger: #ff3333;
+    --glow: 0 0 10px rgba(0, 255, 102, 0.4);
+}
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-family: 'Fira Code', 'Consolas', 'Courier New', monospace !important;
 }
 
-:root {
-    --bg-main: #0f172a;
-    --bg-card: #1e293b;
-    --bg-input: #0f172a;
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
-    --border-color: #334155;
-    --accent: #3b82f6;
-    --accent-hover: #2563eb;
-    --danger: #ef4444;
-    --danger-hover: #dc2626;
-    --success: #22c55e;
-}
-
-body {
+body.terminal-body {
     background-color: var(--bg-main);
     color: var(--text-main);
     display: flex;
@@ -30,66 +31,69 @@ body {
     align-items: flex-start;
     min-height: 100vh;
     padding: 2rem 1rem;
+    text-shadow: 0 0 4px rgba(0, 255, 102, 0.6);
+    overflow-x: hidden;
+}
+
+/* CRT Scanline Overlay Effect */
+.scanline-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: linear-gradient(
+        rgba(18, 16, 16, 0) 50%, 
+        rgba(0, 0, 0, 0.25) 50%
+    );
+    background-size: 100% 4px;
+    z-index: 999;
+    pointer-events: none;
+    opacity: 0.6;
 }
 
 .container {
     width: 100%;
     max-width: 900px;
-    margin: 0 auto;
+    z-index: 10;
 }
 
 /* =========================================
-   CARDS & CONTAINERS
+   TERMINAL CARD & WINDOW BAR
    ========================================= */
-.card {
+.terminal-card {
     background-color: var(--bg-card);
-    border-radius: 12px;
-    padding: 2rem;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--text-main);
+    border-radius: 4px;
+    padding: 1.5rem;
+    box-shadow: var(--glow), inset 0 0 15px rgba(0, 255, 102, 0.05);
 }
 
-.hidden {
-    display: none !important;
-}
-
-.subtitle {
-    color: var(--text-muted);
-    text-align: center;
-    margin-bottom: 1.5rem;
-    font-size: 0.95rem;
-}
-
-/* =========================================
-   DYNAMIC LOGIN HEADER (GREETING & SPINNER)
-   ========================================= */
-#greeting-box {
+.terminal-header-bar {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 12px;
-    margin-bottom: 8px;
+    gap: 8px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
+    margin-bottom: 1.5rem;
 }
 
-#greeting-text {
-    font-size: 1.8rem;
-    font-weight: 600;
-    text-align: center;
-    color: var(--text-main);
-    transition: all 0.3s ease;
-}
-
-.spinner {
-    width: 24px;
-    height: 24px;
-    border: 3px solid rgba(255, 255, 255, 0.1);
+.terminal-header-bar .dot {
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
-    border-top-color: var(--accent);
-    animation: spin 0.8s linear infinite;
+    background-color: var(--text-muted);
 }
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
+.terminal-title {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+}
+
+.hidden { display: none !important; }
+
+.prompt-symbol, .prompt-label {
+    color: var(--text-main);
+    font-weight: bold;
+    margin-right: 6px;
 }
 
 /* =========================================
@@ -97,289 +101,153 @@ body {
    ========================================= */
 .input-group {
     margin-bottom: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 input[type="text"],
 input[type="password"],
 select {
     width: 100%;
-    padding: 12px 16px;
+    padding: 10px 14px;
     background-color: var(--bg-input);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border: 1px solid var(--text-muted);
+    border-radius: 2px;
     color: var(--text-main);
-    font-size: 1rem;
+    font-size: 0.95rem;
     outline: none;
-    transition: border-color 0.2s ease;
+    box-shadow: inset 0 0 5px rgba(0, 255, 102, 0.1);
 }
 
 input:focus, select:focus {
-    border-color: var(--accent);
-}
-
-.error-msg {
-    color: var(--danger);
-    text-align: center;
-    margin-top: 1rem;
-    font-size: 0.9rem;
-    min-height: 1.2rem;
+    border-color: var(--text-main);
+    box-shadow: var(--glow);
 }
 
 /* =========================================
    BUTTONS
    ========================================= */
-.btn {
+.terminal-btn {
     width: 100%;
     padding: 12px;
-    background-color: var(--accent);
-    color: white;
-    border: none;
-    border-radius: 8px;
+    background-color: transparent;
+    color: var(--text-main);
+    border: 1px solid var(--text-main);
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.1s ease;
+    text-align: center;
+    transition: all 0.2s ease;
+    box-shadow: var(--glow);
 }
 
-.btn:hover:not(:disabled) {
-    background-color: var(--accent-hover);
-}
-
-.btn:active:not(:disabled) {
-    transform: scale(0.98);
-}
-
-.btn:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
+.terminal-btn:hover {
+    background-color: var(--text-main);
+    color: var(--bg-main);
 }
 
 .btn-secondary {
-    background-color: var(--border-color);
     width: auto;
-    padding: 8px 16px;
+    padding: 6px 16px;
+    border-color: var(--text-muted);
+    color: var(--text-muted);
 }
 
 .btn-secondary:hover {
-    background-color: #475569;
-}
-
-.btn-sm {
-    padding: 8px 12px;
-    font-size: 0.9rem;
-    width: auto;
+    background-color: var(--danger);
+    color: white;
+    border-color: var(--danger);
 }
 
 /* =========================================
-   DASHBOARD HEADER
+   STATUS & LOADER
+   ========================================= */
+.status-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1.2rem;
+    min-height: 40px;
+}
+
+.error-msg {
+    color: var(--text-main);
+    font-size: 0.95rem;
+    letter-spacing: 1px;
+}
+
+/* Terminal ASCII Spinner */
+.spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid var(--bg-input);
+    border-top: 3px solid var(--text-main);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    margin-bottom: 8px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* =========================================
+   DASHBOARD & GRID
    ========================================= */
 .dashboard-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px dashed var(--border-color);
+    padding-bottom: 1rem;
     margin-bottom: 1.5rem;
-}
-
-#user-display-name {
-    font-size: 1.3rem;
-    margin-bottom: 4px;
 }
 
 .badge {
     display: inline-block;
-    padding: 3px 10px;
-    border-radius: 20px;
+    padding: 2px 8px;
+    border: 1px solid var(--text-muted);
     font-size: 0.75rem;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    background-color: var(--border-color);
-}
-
-/* =========================================
-   ADMIN SECTION (USER MANAGEMENT)
-   ========================================= */
-.admin-section {
-    background-color: rgba(0, 0, 0, 0.15);
-    padding: 1.5rem;
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
-    border: 1px dashed var(--border-color);
-}
-
-.section-desc {
     color: var(--text-muted);
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
 }
 
-/* Grid layout supporting 5 elements (Username, Email, Password, Role, Submit) */
+.admin-section, .upload-zone {
+    border: 1px dashed var(--border-color);
+    padding: 1.2rem;
+    margin-bottom: 1.5rem;
+    background: rgba(0, 255, 102, 0.02);
+}
+
 .admin-form {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 120px auto;
     gap: 10px;
-    margin-bottom: 1rem;
-}
-
-.control-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--bg-card);
-    padding: 12px;
-    border-radius: 6px;
-    margin-bottom: 8px;
-    border: 1px solid var(--border-color);
-}
-
-.user-meta {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    display: block;
-}
-
-/* =========================================
-   FILE UPLOAD BLOCK
-   ========================================= */
-.upload-zone {
-    background-color: rgba(59, 130, 246, 0.05);
-    padding: 1.5rem;
-    border-radius: 8px;
-    margin-bottom: 2rem;
-    border: 1px solid rgba(59, 130, 246, 0.2);
-}
-
-.upload-container-block {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    margin-top: 12px;
-}
-
-.upload-container-block input[type="file"] {
-    background: var(--bg-input);
-    padding: 10px;
-    border-radius: 6px;
-    border: 1px dashed var(--border-color);
-    cursor: pointer;
-    color: var(--text-muted);
-}
-
-.upload-container-block input[type="file"]::file-selector-button {
-    background-color: var(--border-color);
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-right: 12px;
-    transition: background-color 0.2s;
-}
-
-.upload-container-block input[type="file"]::file-selector-button:hover {
-    background-color: #475569;
-}
-
-/* =========================================
-   FILES GRID & FILE CARDS
-   ========================================= */
-.files-section h3 {
-    margin-bottom: 1rem;
+    margin-top: 10px;
 }
 
 .files-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 1rem;
+    margin-top: 1rem;
 }
 
 .file-card {
-    background-color: var(--bg-input);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 1.5rem 1rem;
+    background: var(--bg-input);
+    padding: 1rem;
     text-align: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
 .file-card:hover {
-    transform: translateY(-3px);
-    border-color: var(--accent);
+    border-color: var(--text-main);
+    box-shadow: var(--glow);
 }
 
-.file-icon {
-    font-size: 2.5rem;
-    display: block;
-    margin-bottom: 10px;
-}
-
-.file-card h4 {
-    font-size: 0.95rem;
-    margin-bottom: 0.4rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.file-meta-info {
-    font-size: 0.78rem;
-    color: var(--text-muted);
-    margin: 4px 0 12px 0;
-    font-weight: 500;
-}
-
-.file-actions-row {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-}
-
-.file-action {
-    font-size: 0.85rem;
-    padding: 6px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    text-decoration: none;
-    background-color: var(--accent);
-    color: white;
-    transition: background-color 0.2s;
-}
-
-.file-action:hover {
-    background-color: var(--accent-hover);
-}
-
-.file-action.delete {
-    background-color: transparent;
-    color: var(--danger);
-    border: 1px solid var(--danger);
-}
-
-.file-action.delete:hover {
-    background-color: var(--danger);
-    color: white;
-}
-
-/* =========================================
-   MOBILE RESPONSIVENESS
-   ========================================= */
+/* Mobile responsive */
 @media (max-width: 768px) {
-    .admin-form {
-        grid-template-columns: 1fr;
-    }
-    
-    .dashboard-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-    }
-    
-    #logout-btn {
-        width: 100%;
-    }
+    .admin-form { grid-template-columns: 1fr; }
+    .dashboard-header { flex-direction: column; align-items: flex-start; gap: 15px; }
 }
