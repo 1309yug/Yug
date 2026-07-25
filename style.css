@@ -9,13 +9,16 @@
     --bg-input: #020402;
     --text-main: #00ff66;       /* Matrix Terminal Green */
     --text-muted: #00993d;
-    --border-color: #00ff6644;
+    --border-color: rgba(0, 255, 102, 0.25);
     --accent: #00ff66;
     --accent-hover: #00cc52;
     --danger: #ff3333;
     --glow: 0 0 10px rgba(0, 255, 102, 0.4);
 }
 
+/* =========================================
+   GLOBAL RESET & TYPOGRAPHY
+   ========================================= */
 * {
     margin: 0;
     padding: 0;
@@ -38,7 +41,10 @@ body.terminal-body {
 /* CRT Scanline Overlay Effect */
 .scanline-overlay {
     position: fixed;
-    top: 0; left: 0; width: 100vw; height: 100vh;
+    top: 0; 
+    left: 0; 
+    width: 100vw; 
+    height: 100vh;
     background: linear-gradient(
         rgba(18, 16, 16, 0) 50%, 
         rgba(0, 0, 0, 0.25) 50%
@@ -53,6 +59,12 @@ body.terminal-body {
     width: 100%;
     max-width: 900px;
     z-index: 10;
+}
+
+/* Fix character jitter during text deciphering */
+.type-target, h2, h3, h4, p, label, .badge {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.5px;
 }
 
 /* =========================================
@@ -88,7 +100,15 @@ body.terminal-body {
     letter-spacing: 1px;
 }
 
-.hidden { display: none !important; }
+.hidden { 
+    display: none !important; 
+}
+
+.subtitle {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+}
 
 .prompt-symbol, .prompt-label {
     color: var(--text-main);
@@ -118,6 +138,7 @@ select {
     font-size: 0.95rem;
     outline: none;
     box-shadow: inset 0 0 5px rgba(0, 255, 102, 0.1);
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 input:focus, select:focus {
@@ -142,9 +163,14 @@ input:focus, select:focus {
     box-shadow: var(--glow);
 }
 
-.terminal-btn:hover {
+.terminal-btn:hover:not(:disabled) {
     background-color: var(--text-main);
     color: var(--bg-main);
+}
+
+.terminal-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .btn-secondary {
@@ -154,10 +180,17 @@ input:focus, select:focus {
     color: var(--text-muted);
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover:not(:disabled) {
     background-color: var(--danger);
     color: white;
     border-color: var(--danger);
+    box-shadow: 0 0 10px rgba(255, 51, 51, 0.5);
+}
+
+.btn-sm {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    width: auto;
 }
 
 /* =========================================
@@ -174,11 +207,11 @@ input:focus, select:focus {
 
 .error-msg {
     color: var(--text-main);
-    font-size: 0.95rem;
-    letter-spacing: 1px;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+    word-break: break-word;
 }
 
-/* Terminal ASCII Spinner */
 .spinner {
     width: 24px;
     height: 24px;
@@ -194,7 +227,7 @@ input:focus, select:focus {
 }
 
 /* =========================================
-   DASHBOARD & GRID
+   DASHBOARD & HEADER
    ========================================= */
 .dashboard-header {
     display: flex;
@@ -205,6 +238,11 @@ input:focus, select:focus {
     margin-bottom: 1.5rem;
 }
 
+#user-display-name {
+    font-size: 1.2rem;
+    margin-bottom: 4px;
+}
+
 .badge {
     display: inline-block;
     padding: 2px 8px;
@@ -213,6 +251,9 @@ input:focus, select:focus {
     color: var(--text-muted);
 }
 
+/* =========================================
+   ADMIN SECTION & UPLOAD ZONE
+   ========================================= */
 .admin-section, .upload-zone {
     border: 1px dashed var(--border-color);
     padding: 1.2rem;
@@ -220,13 +261,72 @@ input:focus, select:focus {
     background: rgba(0, 255, 102, 0.02);
 }
 
+.section-desc {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+}
+
 .admin-form {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 120px auto;
     gap: 10px;
     margin-top: 10px;
+    margin-bottom: 1rem;
 }
 
+.control-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-input);
+    padding: 10px 14px;
+    border-radius: 2px;
+    margin-bottom: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.user-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    display: block;
+}
+
+/* Upload input controls */
+.upload-container-block {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.upload-container-block input[type="file"] {
+    background: var(--bg-input);
+    padding: 10px;
+    border: 1px dashed var(--text-muted);
+    cursor: pointer;
+    color: var(--text-muted);
+}
+
+.upload-container-block input[type="file"]::file-selector-button {
+    background-color: transparent;
+    color: var(--text-main);
+    border: 1px solid var(--text-main);
+    padding: 4px 10px;
+    cursor: pointer;
+    margin-right: 12px;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.upload-container-block input[type="file"]::file-selector-button:hover {
+    background-color: var(--text-main);
+    color: var(--bg-main);
+}
+
+/* =========================================
+   FILES GRID & CARDS
+   ========================================= */
 .files-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -239,6 +339,10 @@ input:focus, select:focus {
     background: var(--bg-input);
     padding: 1rem;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .file-card:hover {
@@ -246,8 +350,74 @@ input:focus, select:focus {
     box-shadow: var(--glow);
 }
 
-/* Mobile responsive */
+.file-icon {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.file-card h4 {
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-meta-info {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+.file-actions-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.file-action {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    border: 1px solid var(--text-main);
+    background-color: transparent;
+    color: var(--text-main);
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.file-action:hover {
+    background-color: var(--text-main);
+    color: var(--bg-main);
+}
+
+.file-action.delete {
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.file-action.delete:hover {
+    background-color: var(--danger);
+    color: white;
+    box-shadow: 0 0 8px rgba(255, 51, 51, 0.6);
+}
+
+/* =========================================
+   MOBILE RESPONSIVENESS
+   ========================================= */
 @media (max-width: 768px) {
-    .admin-form { grid-template-columns: 1fr; }
-    .dashboard-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+    .admin-form {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    #logout-btn {
+        width: 100%;
+    }
 }
