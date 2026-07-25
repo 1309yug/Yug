@@ -1,17 +1,219 @@
 // =========================================================
 // CONFIGURATION & GLOBAL STATE
 // =========================================================
-// Replace with your active Google Apps Script Web App URL
-const GOOGLE_DRIVE_BRIDGE_URL = "YOUR_DEPLOYED_WEB_APP_URL";
+const GOOGLE_DRIVE_BRIDGE_URL = "https://script.google.com/macros/s/AKfycbyth_SYwK-LGbTfuO18D8mg4kyNRyGKfBuss7HxutqgSTN2ysct5pj8gs8m2n8RYq0PYQ/exec";
 
 let currentUser = null;
 let userRole = null;
 
 // =========================================================
-// DOM ELEMENTS
+// OPTION 2: WEB AUDIO API SOUND SYNTHESIZER
 // =========================================================
-const loginScreen = document.getElementById('login-screen');
-const dashboardScreen = document.getElementById('dashboard-screen');
+const AudioFX = {
+    ctx: null,
+
+    // Initialize AudioContext lazily on user interaction
+    init() {
+        if (!this.ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioCtx();
+        }
+        if (this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
+    },
+
+    // Crisp mechanical keyboard click
+    playKeyClick() {
+        try {
+            this.init();
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(1200 + Math.random() * 500, now);
+            osc.frequency.exponentialRampToValueAtTime(150, now + 0.012);
+
+            gain.gain.setValueAtTime(0.08, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.012);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.012);
+        } catch (e) {}
+    },
+
+    // Rapid high-frequency blip for text deciphering
+    playDecipherTick() {
+        try {
+            this.init();
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(800 + Math.random() * 800, now);
+
+            gain.gain.setValueAtTime(0.015, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.008);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.008);
+        } catch (e) {}
+    },
+
+    // Retro "ACCESS GRANTED" tri-tone chime
+    playSuccess() {
+        try {
+            this.init();
+            const now = this.ctx.currentTime;
+            const freqs = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+
+            freqs.forEach((freq, idx) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+
+                gain.gain.setValueAtTime(0, now + idx * 0.07);
+                gain.gain.linearRampToValueAtTime(0.12, now + idx * 0.07 + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + 0.15);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now + idx * 0.07);
+                osc.stop(now + idx * 0.07 + 0.15);
+            });
+        } catch (e) {}
+    },
+
+    // Harsh retro "ACCESS DENIED" square-wave buzz
+    playError() {
+        try {
+            this.init();
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(160, now);
+            osc.frequency.setValueAtTime(110, now + 0.1);
+
+            gain.gain.setValueAtTime(0.18, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.35);
+        } catch (e) {}
+    }
+};
+
+// =========================================================
+// TEXT DECIPHER / CYBER SCRAMBLE ENGINE
+// =========================================================
+const CIPHER_CHARS = '!@#$%^&*()_+-=[]{}|;:,.<>?/0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZÃÆØÅ≡µ±≤≥≠';
+
+/**
+ * Scrambles text using matrix characters before revealing real letters
+ * @param {HTMLElement} element - Target element
+ * @param {string} finalText - String to decipher into
+ * @param {number} speed - Refresh rate in ms
+ */
+function decipherText(element, finalText, speed = 25) {
+    return new Promise((resolve) => {
+        let iteration = 0;
+        const totalLength = finalText.length;
+
+        const timer = setInterval(() => {
+            element.textContent = finalText
+                .split('')
+                .map((char, index) => {
+                    if (char === ' ' || char === '\n') return char;
+                    if (index < iteration) return finalText[index];
+                    return CIPHER_CHARS[Math.floor(Math.random() * CIPHER_CHARS.length)];
+                })
+                .join('');
+
+            AudioFX.playDecipherTick();
+
+            if (iteration >= totalLength) {
+                clearInterval(timer);
+                element.textContent = finalText; // Clean finish lock
+                resolve();
+            }
+
+            iteration += 0.5; // Deciphers 1 character every 2 frames
+        }, speed);
+    });
+}
+
+/**
+ * Scans a container and deciphers all marked text elements sequentially
+ * @param {HTMLElement} container 
+ */
+async function animateContainerText(container) {
+    const targets = container.querySelectorAll('.type-target, p, h2, h3, h4, label, .badge, .section-desc');
+
+    for (const el of targets) {
+        if (el.children.length === 0 && el.textContent.trim() !== '') {
+            if (!el.hasAttribute('data-raw-text')) {
+                el.setAttribute('data-raw-text', el.textContent.trim());
+            }
+            const fullText = el.getAttribute('data-raw-text');
+            await decipherText(el, fullText, 18);
+        }
+    }
+}
+
+// =========================================================
+// BACKEND API BRIDGE
+// =========================================================
+async function apiCall(payload) {
+    try {
+        const response = await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload)
+        });
+        return await response.json();
+    } catch (err) {
+        console.error("API Error:", err);
+        return { success: false, message: "Network connection lost or server unreachable." };
+    }
+}
+
+// =========================================================
+// INITIAL PAGE LOAD & EVENT LISTENERS
+// =========================================================
+document.addEventListener('DOMContentLoaded', () => {
+    const loginScreen = document.getElementById('login-screen');
+    if (loginScreen) {
+        animateContainerText(loginScreen);
+    }
+
+    // Attach mechanical key sound to every input typing event
+    document.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
+            // Ignore pure modifier keys
+            if (!['Control', 'Shift', 'Alt', 'Meta', 'CapsLock'].includes(e.key)) {
+                AudioFX.playKeyClick();
+            }
+        }
+    });
+});
+
+// DOM References
 const loginForm = document.getElementById('login-form');
 const emailInput = document.getElementById('email-input');
 const passwordInput = document.getElementById('password-input');
@@ -19,6 +221,8 @@ const loginBtn = document.getElementById('login-btn');
 const spinner = document.getElementById('greeting-spinner');
 const errorMsg = document.getElementById('error-msg');
 
+const dashboardScreen = document.getElementById('dashboard-screen');
+const loginScreen = document.getElementById('login-screen');
 const userDisplayName = document.getElementById('user-display-name');
 const userRoleBadge = document.getElementById('user-role-badge');
 const logoutBtn = document.getElementById('logout-btn');
@@ -32,103 +236,23 @@ const uploadBtn = document.getElementById('upload-btn');
 const filesGrid = document.getElementById('files-grid');
 
 // =========================================================
-// TYPEWRITER ANIMATION ENGINE
-// =========================================================
-
-/**
- * Types text out letter-by-letter inside an HTML element
- * @param {HTMLElement} element - Target element
- * @param {string} text - Text to type
- * @param {number} speed - Delay in ms per letter
- */
-function typeWriter(element, text, speed = 30) {
-    return new Promise((resolve) => {
-        element.textContent = '';
-        let i = 0;
-        const timer = setInterval(() => {
-            if (i < text.length) {
-                element.textContent += text.charAt(i);
-                i++;
-            } else {
-                clearInterval(timer);
-                resolve();
-            }
-        }, speed);
-    });
-}
-
-/**
- * Scans a container and types out all marked text elements letter-by-letter
- * @param {HTMLElement} container 
- */
-async function animateContainerText(container) {
-    const targets = container.querySelectorAll('.type-target, p, h2, h3, h4, label, .badge, .section-desc');
-    
-    for (const el of targets) {
-        // Only type elements that are visible and contain text directly
-        if (el.children.length === 0 && el.textContent.trim() !== '') {
-            if (!el.hasAttribute('data-raw-text')) {
-                el.setAttribute('data-raw-text', el.textContent.trim());
-            }
-            const fullText = el.getAttribute('data-raw-text');
-            await typeWriter(el, fullText, 15);
-        }
-    }
-}
-
-// =========================================================
-// BACKEND API BRIDGE
-// =========================================================
-
-/**
- * Wrapper for POST requests to Google Apps Script Web App
- * @param {Object} payload 
- */
-async function apiCall(payload) {
-    try {
-        const response = await fetch(GOOGLE_DRIVE_BRIDGE_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify(payload)
-        });
-        return await response.json();
-    } catch (err) {
-        console.error("API Error:", err);
-        return { success: false, message: "Network error or server unreachable." };
-    }
-}
-
-// =========================================================
-// INITIAL PAGE LOAD
-// =========================================================
-document.addEventListener('DOMContentLoaded', () => {
-    // Typewriter initialization for login screen terminal text
-    if (loginScreen) {
-        animateContainerText(loginScreen);
-    }
-});
-
-// =========================================================
-// AUTHENTICATION & LOGIN FLOW
+// AUTHENTICATION FLOW
 // =========================================================
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     const username = emailInput.value.trim();
     const password = passwordInput.value.trim();
 
     if (!username || !password) return;
 
-    // Lock login button during authentication
     loginBtn.disabled = true;
 
-    // Step 1: Type letter-by-letter "VERIFYING CREDENTIALS..." ONCE
-    await typeWriter(errorMsg, '> VERIFYING CREDENTIALS IN DATABASE...', 35);
-    
-    // Step 2: Show loading spinner
+    // Decipher verification string
+    await decipherText(errorMsg, '> VERIFYING ENCRYPTED CREDENTIALS...', 20);
     spinner.classList.remove('hidden');
 
-    // Step 3: Run backend request and 5-second timer concurrently
+    // Run 5-second login delay and API promise concurrently
     const apiPromise = apiCall({ action: 'login', username, password });
     const timerPromise = new Promise(resolve => setTimeout(resolve, 5000));
 
@@ -138,14 +262,14 @@ loginForm.addEventListener('submit', async (e) => {
     loginBtn.disabled = false;
 
     if (response && response.success) {
+        AudioFX.playSuccess();
+
         currentUser = response.user.username;
         userRole = response.user.role || 'viewer';
 
-        // Update UI Header details
         userDisplayName.textContent = `OPERATOR: ${currentUser.toUpperCase()}`;
         userRoleBadge.textContent = userRole.toUpperCase();
 
-        // Reveal Admin Section if user is Owner/Co-Owner
         if (userRole === 'primary_owner' || userRole === 'owner') {
             adminSection.classList.remove('hidden');
             fetchUsers();
@@ -153,24 +277,22 @@ loginForm.addEventListener('submit', async (e) => {
             adminSection.classList.add('hidden');
         }
 
-        // Switch to Dashboard Screen
         loginScreen.classList.add('hidden');
         dashboardScreen.classList.remove('hidden');
         errorMsg.textContent = '';
 
-        // Step 4: Type out all text inside dashboard letter-by-letter
+        // Decipher all text on dashboard
         await animateContainerText(dashboardScreen);
-
-        // Fetch cloud documents
         fetchFiles();
     } else {
-        // Display Terminal Error
-        await typeWriter(errorMsg, `> ACCESS DENIED: ${response.message || 'INVALID PASSKEY'}`, 25);
+        AudioFX.playError();
+        await decipherText(errorMsg, `> ACCESS DENIED: ${response.message || 'INVALID PASSKEY'}`, 15);
     }
 });
 
 // Logout handler
 logoutBtn.addEventListener('click', () => {
+    AudioFX.playError();
     currentUser = null;
     userRole = null;
     dashboardScreen.classList.add('hidden');
@@ -181,26 +303,24 @@ logoutBtn.addEventListener('click', () => {
 });
 
 // =========================================================
-// CLOUD FILE MANAGEMENT
+// FILE MANAGEMENT
 // =========================================================
-
 async function fetchFiles() {
-    filesGrid.innerHTML = '<p class="type-target">&gt; SCANNING CLOUD DIRECTORY...</p>';
-    
+    filesGrid.innerHTML = '<p class="type-target">&gt; SCANNING CLOUD REPOSITORY...</p>';
     const res = await apiCall({ action: 'getFiles' });
-    
+
     if (res && res.success && Array.isArray(res.files)) {
         renderFiles(res.files);
     } else {
-        filesGrid.innerHTML = '<p class="type-target">&gt; NO DOCUMENTS FOUND IN CLOUD REPOSITORY.</p>';
+        filesGrid.innerHTML = '<p class="type-target">&gt; NO DOCUMENTS FOUND IN REPOSITORY.</p>';
     }
 }
 
 function renderFiles(files) {
     filesGrid.innerHTML = '';
-    
+
     if (files.length === 0) {
-        filesGrid.innerHTML = '<p class="type-target">&gt; NO DOCUMENTS STORED YET.</p>';
+        filesGrid.innerHTML = '<p class="type-target">&gt; REPOSITORY EMPTY.</p>';
         return;
     }
 
@@ -221,6 +341,13 @@ function renderFiles(files) {
             </div>
         `;
 
+        // Hover decipher effect on card title
+        const titleEl = card.querySelector('h4');
+        card.addEventListener('mouseenter', () => {
+            const original = titleEl.getAttribute('title');
+            decipherText(titleEl, original, 15);
+        });
+
         const deleteBtn = card.querySelector('.delete');
         deleteBtn.addEventListener('click', () => handleDeleteFile(file.id, file.url));
 
@@ -228,21 +355,20 @@ function renderFiles(files) {
     });
 }
 
-// Upload file implementation
 uploadBtn.addEventListener('click', async () => {
     const file = fileChooser.files[0];
     if (!file) {
-        alert('Please select a file to upload!');
+        alert('Select a document to upload.');
         return;
     }
 
     uploadBtn.disabled = true;
-    uploadBtn.textContent = 'ENCRYPTING & UPLOADING...';
+    uploadBtn.textContent = 'ENCRYPTING & TRANSMITTING...';
 
     const reader = new FileReader();
     reader.onload = async (e) => {
         const base64Data = e.target.result.split(',')[1];
-        
+
         const payload = {
             action: 'upload',
             filename: file.name,
@@ -258,8 +384,10 @@ uploadBtn.addEventListener('click', async () => {
         fileChooser.value = '';
 
         if (res && res.success) {
+            AudioFX.playSuccess();
             fetchFiles();
         } else {
+            AudioFX.playError();
             alert('Upload failed: ' + (res.message || 'Unknown error'));
         }
     };
@@ -267,9 +395,8 @@ uploadBtn.addEventListener('click', async () => {
     reader.readAsDataURL(file);
 });
 
-// Delete file implementation
 async function handleDeleteFile(fileId, fileUrl) {
-    if (!confirm('Are you sure you want to permanently delete this document?')) return;
+    if (!confirm('Permanently purge this record from memory?')) return;
 
     const res = await apiCall({
         action: 'delete',
@@ -278,20 +405,21 @@ async function handleDeleteFile(fileId, fileUrl) {
     });
 
     if (res && res.success) {
+        AudioFX.playSuccess();
         fetchFiles();
     } else {
-        alert('Delete failed: ' + (res.message || 'Error executing request'));
+        AudioFX.playError();
+        alert('Purge failed: ' + (res.message || 'Error executing request'));
     }
 }
 
 // =========================================================
-// ADMIN & USER MANAGEMENT
+// USER MANAGEMENT
 // =========================================================
-
 async function fetchUsers() {
-    userListContainer.innerHTML = '<p class="type-target">&gt; FETCHING ACCESS CONTROL LIST...</p>';
+    userListContainer.innerHTML = '<p class="type-target">&gt; READING DIRECTORY ACCESS LIST...</p>';
     const res = await apiCall({ action: 'getUsers' });
-    
+
     if (res && res.success && Array.isArray(res.users)) {
         renderUsers(res.users);
     }
@@ -299,7 +427,7 @@ async function fetchUsers() {
 
 function renderUsers(users) {
     userListContainer.innerHTML = '';
-    
+
     users.forEach(u => {
         const div = document.createElement('div');
         div.className = 'control-item';
@@ -316,7 +444,7 @@ function renderUsers(users) {
 
 createUserForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     const username = document.getElementById('new-username').value.trim();
     const email = document.getElementById('new-email').value.trim();
     const password = document.getElementById('new-password').value.trim();
@@ -331,17 +459,18 @@ createUserForm.addEventListener('submit', async (e) => {
     });
 
     if (res && res.success) {
+        AudioFX.playSuccess();
         createUserForm.reset();
         fetchUsers();
     } else {
-        alert('Failed to create user: ' + (res.message || 'Server error'));
+        AudioFX.playError();
+        alert('Failed to register user: ' + (res.message || 'Server error'));
     }
 });
 
 // =========================================================
-// HELPER FUNCTIONS
+// HELPERS
 // =========================================================
-
 function getFileIcon(filename, mimeType) {
     const ext = (filename || '').split('.').pop().toLowerCase();
     if (mimeType?.includes('image') || ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext)) return '🖼️';
