@@ -3,55 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Storage Dashboard</title>
+    <title>TERMINAL // SECURE ACCESS</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="terminal-body">
+    <!-- CRT Overlay Lines for authentic Hacker Monitor look -->
+    <div class="scanline-overlay"></div>
+
     <div class="container">
         <!-- LOGIN SCREEN -->
-        <div id="login-screen" class="card">
-            <div id="greeting-box">
-                <h2 id="greeting-text">Hi, Yug</h2>
-                <div id="greeting-spinner" class="spinner hidden"></div>
+        <div id="login-screen" class="card terminal-card">
+            <div class="terminal-header-bar">
+                <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                <span class="terminal-title">CMD.EXE - AUTHENTICATION_PROMPT</span>
             </div>
-            <p class="subtitle">🔒 Secure Portal</p>
+
+            <div id="greeting-box">
+                <span class="prompt-symbol">C:\SYSTEM&gt;</span>
+                <h2 id="greeting-text" class="type-target">SYSTEM ACCESS</h2>
+            </div>
+            <p class="subtitle type-target">Enter security passkey to decrypt workspace...</p>
             
-            <form id="login-form" autocomplete="on">
+            <form id="login-form" autocomplete="off">
                 <div class="input-group">
-                    <input type="text" id="email-input" name="username" placeholder="Username or Email" autocomplete="username" required>
+                    <label class="prompt-label">USER_ID&gt;</label>
+                    <input type="text" id="email-input" name="username" placeholder="enter_username" autocomplete="username" required>
                 </div>
                 <div class="input-group">
-                    <input type="password" id="password-input" name="password" placeholder="Password" autocomplete="current-password" required>
+                    <label class="prompt-label">PASSKEY&gt;</label>
+                    <input type="password" id="password-input" name="password" placeholder="••••••••" autocomplete="current-password" required>
                 </div>
-                <button type="submit" class="btn">Login</button>
-                <p id="error-msg" class="error-msg"></p>
+
+                <button type="submit" id="login-btn" class="btn terminal-btn">&gt; EXECUTE LOGIN</button>
+                
+                <!-- Status area for Verifying typewriter & Spinner -->
+                <div class="status-container">
+                    <div id="greeting-spinner" class="spinner hidden"></div>
+                    <p id="error-msg" class="error-msg"></p>
+                </div>
             </form>
         </div>
 
         <!-- DASHBOARD SCREEN -->
-        <div id="dashboard-screen" class="card hidden">
+        <div id="dashboard-screen" class="card terminal-card hidden">
+            <div class="terminal-header-bar">
+                <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                <span class="terminal-title">C:\USERS\DASHBOARD.EXE</span>
+            </div>
+
             <div class="dashboard-header">
                 <div>
-                    <h2 id="user-display-name">Storage Dashboard</h2>
-                    <span id="user-role-badge" class="badge">Role</span>
+                    <span class="prompt-symbol">ROOT@LOCAL:~#</span>
+                    <h2 id="user-display-name" class="type-target">Storage Dashboard</h2>
+                    <span id="user-role-badge" class="badge type-target">Role</span>
                 </div>
-                <button id="logout-btn" class="btn btn-secondary">Logout</button>
+                <button id="logout-btn" class="btn btn-secondary terminal-btn">[ LOGOUT ]</button>
             </div>
 
             <!-- ADMIN CONTROL PANEL -->
             <div id="admin-section" class="admin-section hidden">
-                <h3>User & Role Management</h3>
-                <p class="section-desc">User Directory</p>
+                <h3 class="type-target">&gt; USER & ROLE MANAGEMENT</h3>
+                <p class="section-desc type-target">Directory Access Controls</p>
                 
                 <form id="create-user-form" class="admin-form" autocomplete="off">
-                    <input type="text" id="new-username" placeholder="New Username" required>
+                    <input type="text" id="new-username" placeholder="Username" required>
                     <input type="text" id="new-email" placeholder="Email (optional)">
                     <input type="password" id="new-password" placeholder="Password" required>
                     <select id="new-role">
                         <option value="owner">Co-Owner</option>
                         <option value="viewer" selected>Viewer</option>
                     </select>
-                    <button type="submit" class="btn btn-sm">Create User</button>
+                    <button type="submit" class="btn btn-sm terminal-btn">+ ADD USER</button>
                 </form>
                 
                 <div id="user-list-container" class="control-grid"></div>
@@ -59,16 +81,16 @@
 
             <!-- UPLOAD SECTION -->
             <div id="upload-section" class="upload-zone">
-                <h3>Upload New Document</h3>
+                <h3 class="type-target">&gt; UPLOAD ENCRYPTED DOCUMENT</h3>
                 <div class="upload-container-block">
                     <input type="file" id="file-chooser">
-                    <button id="upload-btn" class="btn">Upload to Cloud 📤</button>
+                    <button id="upload-btn" class="btn terminal-btn">UPLOAD TO CLOUD 📤</button>
                 </div>
             </div>
 
             <!-- FILES LIST SECTION -->
             <div class="files-section">
-                <h3>Cloud Documents</h3>
+                <h3 class="type-target">&gt; DECRYPTED CLOUD DOCUMENTS</h3>
                 <div id="files-grid" class="files-grid"></div>
             </div>
         </div>
