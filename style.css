@@ -27,7 +27,6 @@
 body {
   font-family: 'Share Tech Mono', monospace;
   background-color: var(--bg-dark);
-  /* Radial ambient glow spotlight + cyber grid lines */
   background-image: 
     radial-gradient(circle at 50% 30%, rgba(0, 255, 204, 0.08) 0%, transparent 65%),
     linear-gradient(rgba(0, 255, 204, 0.04) 1px, transparent 1px),
@@ -43,13 +42,13 @@ body {
 }
 
 /* =========================================================
-   3. CYBERPUNK TYPOGRAPHY & HEADER GLOWS
+   3. TYPOGRAPHY & HEADERS
    ========================================================= */
 h1, h2, h3, h4, 
-.user-display-name, 
-.section-title {
+.user-display-name {
   text-shadow: 0 0 8px rgba(0, 255, 204, 0.5);
   text-transform: uppercase;
+  margin-bottom: 10px;
 }
 
 p, label, span {
@@ -67,23 +66,20 @@ p, label, span {
   width: 6px;
   height: 6px;
 }
-
 ::-webkit-scrollbar-track {
   background: var(--bg-dark);
 }
-
 ::-webkit-scrollbar-thumb {
   background: rgba(0, 255, 204, 0.3);
   border-radius: 3px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
   background: var(--primary-glow);
   box-shadow: 0 0 10px var(--primary-glow);
 }
 
 /* =========================================================
-   5. AUTHENTICATION & LOGIN UI STYLING
+   5. AUTHENTICATION / LOGIN CONTAINER
    ========================================================= */
 #login-screen {
   display: flex;
@@ -107,7 +103,7 @@ p, label, span {
   overflow: hidden;
 }
 
-/* Animated Top Scanner Line on Auth Panel */
+/* Animated Top Scanner Line */
 .login-container::after {
   content: '';
   position: absolute;
@@ -142,26 +138,23 @@ p, label, span {
   opacity: 0.85;
 }
 
-/* Terminal Error & Access Denied Display */
 #error-msg {
+  margin-top: 15px;
   min-height: 24px;
   font-size: 0.85rem;
   color: var(--amber-alert);
   text-shadow: 0 0 6px rgba(255, 170, 0, 0.4);
-  word-break: break-word;
 }
 
-/* Encrypted Spinner */
 #greeting-spinner {
-  width: 20px;
-  height: 20px;
+  width: 14px;
+  height: 14px;
   border: 2px solid var(--border-glow);
   border-top-color: var(--primary-glow);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   display: inline-block;
-  margin-left: 10px;
-  vertical-align: middle;
+  margin-left: 8px;
 }
 
 @keyframes spin {
@@ -169,7 +162,7 @@ p, label, span {
 }
 
 /* =========================================================
-   6. DASHBOARD & HEADER LAYOUT
+   6. DASHBOARD & CARDS
    ========================================================= */
 #dashboard-screen {
   padding: 30px;
@@ -178,18 +171,25 @@ p, label, span {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  gap: 25px;
+}
+
+.dashboard-header,
+.dashboard-card,
+.admin-section {
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-glow);
+  padding: 22px;
+  border-radius: 6px;
+  box-shadow: 0 0 15px var(--primary-glow-dim);
 }
 
 .dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--card-bg);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border-glow);
-  padding: 18px 24px;
-  border-radius: 6px;
 }
 
 .user-info {
@@ -198,7 +198,6 @@ p, label, span {
   gap: 12px;
 }
 
-/* Pulsing Status LED Indicator */
 .status-indicator {
   display: inline-block;
   width: 9px;
@@ -215,18 +214,23 @@ p, label, span {
   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 204, 0); }
 }
 
-/* Clearance & Security Badges */
-.badge, #user-role-badge {
+.badge {
   background: rgba(0, 255, 204, 0.12);
   border: 1px solid var(--border-glow);
   padding: 3px 10px;
   border-radius: 4px;
   font-size: 0.75rem;
-  letter-spacing: 0.1em;
+}
+
+/* Upload Row */
+.upload-controls {
+  display: flex;
+  gap: 15px;
+  margin-top: 10px;
 }
 
 /* =========================================================
-   7. FORM INPUTS & BUTTON CONTROLS
+   7. INPUTS & BUTTONS
    ========================================================= */
 input[type="text"],
 input[type="email"],
@@ -237,7 +241,7 @@ select {
   border: 1px solid var(--border-glow) !important;
   color: var(--primary-glow) !important;
   font-family: 'Share Tech Mono', monospace;
-  padding: 12px 14px;
+  padding: 10px 14px;
   border-radius: 4px;
   outline: none;
   width: 100%;
@@ -263,6 +267,7 @@ button, .file-action {
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 button:hover, .file-action:hover {
@@ -271,18 +276,13 @@ button:hover, .file-action:hover {
   box-shadow: 0 0 12px rgba(0, 255, 204, 0.3);
 }
 
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 /* =========================================================
-   8. REPOSITORY FILE CARDS & SHIMMER SCAN ANIMATION
+   8. REPOSITORY GRID & SHIMMER CARDS
    ========================================================= */
 #files-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 18px;
   margin-top: 15px;
 }
 
@@ -290,19 +290,17 @@ button:disabled {
   position: relative;
   background: var(--card-bg);
   backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border-glow);
   border-radius: 6px;
-  padding: 20px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  box-shadow: 0 0 15px var(--primary-glow-dim);
+  gap: 10px;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Card Light Sweep / Shimmer Animation on Hover */
+/* Card Light Sweep Shimmer */
 .file-card::before {
   content: '';
   position: absolute;
@@ -310,12 +308,7 @@ button:disabled {
   left: -100%;
   width: 50%;
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(0, 255, 204, 0.15),
-    transparent
-  );
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 204, 0.15), transparent);
   transition: left 0.6s ease-in-out;
   pointer-events: none;
 }
@@ -326,12 +319,12 @@ button:disabled {
 
 .file-card:hover {
   border-color: rgba(0, 255, 204, 0.7);
-  box-shadow: 0 0 25px rgba(0, 255, 204, 0.25), inset 0 0 10px rgba(0, 255, 204, 0.05);
-  transform: translateY(-3px);
+  box-shadow: 0 0 20px rgba(0, 255, 204, 0.25);
+  transform: translateY(-2px);
 }
 
 .file-icon {
-  font-size: 2rem;
+  font-size: 1.8rem;
 }
 
 .file-meta-info {
@@ -341,8 +334,8 @@ button:disabled {
 
 .file-actions-row {
   display: flex;
-  gap: 10px;
-  margin-top: auto;
+  gap: 8px;
+  margin-top: 5px;
 }
 
 .file-action.delete {
@@ -357,50 +350,27 @@ button:disabled {
   box-shadow: 0 0 12px var(--danger-glow);
 }
 
-/* =========================================================
-   9. ADMIN CONTROL PANEL
-   ========================================================= */
-.admin-section {
-  background: var(--card-bg);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border-glow);
-  padding: 24px;
-  border-radius: 6px;
-  box-shadow: 0 0 15px var(--primary-glow-dim);
+/* Admin Grid Layout */
+.admin-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 10px;
 }
 
 .control-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
+  padding: 10px 14px;
   background: rgba(5, 10, 20, 0.5);
   border: 1px solid var(--border-glow);
   border-radius: 4px;
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 .user-meta {
   display: block;
   font-size: 0.75rem;
   opacity: 0.7;
-}
-
-/* =========================================================
-   10. RESPONSIVE BREAKPOINTS
-   ========================================================= */
-@media (max-width: 600px) {
-  #dashboard-screen {
-    padding: 15px;
-  }
-
-  .dashboard-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-  }
-
-  #files-grid {
-    grid-template-columns: 1fr;
-  }
 }
