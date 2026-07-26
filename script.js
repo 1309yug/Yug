@@ -2,7 +2,7 @@
 // CONFIGURATION & GLOBAL STATE
 // =========================================================
 // Replace this placeholder with your published Apps Script Web App URL ending in /exec
-const GOOGLE_DRIVE_BRIDGE_URL = "https://script.google.com/macros/s/AKfycbzwQ1rA9RVgYpOjic-7jjUFYlf9vvUj-PVi39uy5Cf-W4YQUPAWaGoKZwaKY9dhyeIdjA/exec";
+const GOOGLE_DRIVE_BRIDGE_URL = "https://script.google.com/macros/s/AKfycbySALwomsZt8TSS05SYfyhWnGuTAWZXX-mnrPpkgw1QNXQKSYKZl-15GtqofXu4qMna-w/exec";
 
 let currentUser = null;
 let userRole = null;
