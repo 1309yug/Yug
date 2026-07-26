@@ -1,423 +1,115 @@
-/* =========================================
-   MATRIX / COMMAND PROMPT THEME
-   ========================================= */
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
 
+/* =========================================================
+   1. CYBERPUNK TYPOGRAPHY & GLOBAL THEMING
+   ========================================================= */
 :root {
-    --bg-main: #050805;
-    --bg-card: #0a0f0d;
-    --bg-input: #020402;
-    --text-main: #00ff66;       /* Matrix Terminal Green */
-    --text-muted: #00993d;
-    --border-color: rgba(0, 255, 102, 0.25);
-    --accent: #00ff66;
-    --accent-hover: #00cc52;
-    --danger: #ff3333;
-    --glow: 0 0 10px rgba(0, 255, 102, 0.4);
+  --primary-glow: #00ffcc;
+  --primary-glow-dim: rgba(0, 255, 204, 0.15);
+  --bg-dark: #050811;
+  --card-bg: rgba(10, 15, 25, 0.75);
+  --border-glow: rgba(0, 255, 204, 0.25);
 }
 
-/* =========================================
-   GLOBAL RESET & TYPOGRAPHY
-   ========================================= */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Fira Code', 'Consolas', 'Courier New', monospace !important;
+body {
+  font-family: 'Share Tech Mono', monospace;
+  background-color: var(--bg-dark);
+  color: var(--primary-glow);
+  letter-spacing: 0.05em;
+  margin: 0;
+  padding: 0;
 }
 
-body.terminal-body {
-    background-color: var(--bg-main);
-    color: var(--text-main);
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    min-height: 100vh;
-    padding: 2rem 1rem;
-    text-shadow: 0 0 4px rgba(0, 255, 102, 0.6);
-    overflow-x: hidden;
+/* Glow effects for text headers and key elements */
+h1, h2, h3, h4, 
+.user-display-name, 
+.badge {
+  text-shadow: 0 0 8px rgba(0, 255, 204, 0.5);
+  text-transform: uppercase;
 }
 
-/* CRT Scanline Overlay Effect */
-.scanline-overlay {
-    position: fixed;
-    top: 0; 
-    left: 0; 
-    width: 100vw; 
-    height: 100vh;
-    background: linear-gradient(
-        rgba(18, 16, 16, 0) 50%, 
-        rgba(0, 0, 0, 0.25) 50%
-    );
-    background-size: 100% 4px;
-    z-index: 999;
-    pointer-events: none;
-    opacity: 0.6;
+/* =========================================================
+   2. GLASSMORPHISM & NEON CARDS
+   ========================================================= */
+.login-container,
+.file-card,
+.control-item,
+.admin-section,
+.dashboard-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-glow);
+  border-radius: 6px;
+  box-shadow: 0 0 15px var(--primary-glow-dim);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.container {
-    width: 100%;
-    max-width: 900px;
-    z-index: 10;
+/* Subtle elevation and glow on hover */
+.file-card:hover, 
+.control-item:hover {
+  border-color: rgba(0, 255, 204, 0.7);
+  box-shadow: 0 0 25px rgba(0, 255, 204, 0.25), inset 0 0 10px rgba(0, 255, 204, 0.05);
+  transform: translateY(-3px);
 }
 
-/* Fix character jitter during text deciphering */
-.type-target, h2, h3, h4, p, label, .badge {
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0.5px;
+/* =========================================================
+   3. CUSTOM DARK SCROLLBARS & FORM INPUTS
+   ========================================================= */
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-/* =========================================
-   TERMINAL CARD & WINDOW BAR
-   ========================================= */
-.terminal-card {
-    background-color: var(--bg-card);
-    border: 1px solid var(--text-main);
-    border-radius: 4px;
-    padding: 1.5rem;
-    box-shadow: var(--glow), inset 0 0 15px rgba(0, 255, 102, 0.05);
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
 }
 
-.terminal-header-bar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 8px;
-    margin-bottom: 1.5rem;
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 204, 0.3);
+  border-radius: 3px;
 }
 
-.terminal-header-bar .dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background-color: var(--text-muted);
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 204, 0.8);
+  box-shadow: 0 0 10px var(--primary-glow);
 }
 
-.terminal-title {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    letter-spacing: 1px;
-}
-
-.hidden { 
-    display: none !important; 
-}
-
-.subtitle {
-    color: var(--text-muted);
-    margin-bottom: 1.5rem;
-    font-size: 0.9rem;
-}
-
-.prompt-symbol, .prompt-label {
-    color: var(--text-main);
-    font-weight: bold;
-    margin-right: 6px;
-}
-
-/* =========================================
-   FORMS & INPUTS
-   ========================================= */
-.input-group {
-    margin-bottom: 1.2rem;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
+/* Styled Terminal Inputs & Selects */
 input[type="text"],
+input[type="email"],
 input[type="password"],
 select {
-    width: 100%;
-    padding: 10px 14px;
-    background-color: var(--bg-input);
-    border: 1px solid var(--text-muted);
-    border-radius: 2px;
-    color: var(--text-main);
-    font-size: 0.95rem;
-    outline: none;
-    box-shadow: inset 0 0 5px rgba(0, 255, 102, 0.1);
-    transition: border-color 0.2s, box-shadow 0.2s;
+  background: rgba(5, 10, 20, 0.85) !important;
+  border: 1px solid var(--border-glow) !important;
+  color: var(--primary-glow) !important;
+  font-family: 'Share Tech Mono', monospace;
+  padding: 10px 14px;
+  border-radius: 4px;
+  outline: none;
+  transition: all 0.2s ease;
 }
 
-input:focus, select:focus {
-    border-color: var(--text-main);
-    box-shadow: var(--glow);
+input:focus, 
+select:focus {
+  border-color: var(--primary-glow) !important;
+  box-shadow: 0 0 12px rgba(0, 255, 204, 0.4);
 }
 
-/* =========================================
-   BUTTONS
-   ========================================= */
-.terminal-btn {
-    width: 100%;
-    padding: 12px;
-    background-color: transparent;
-    color: var(--text-main);
-    border: 1px solid var(--text-main);
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.2s ease;
-    box-shadow: var(--glow);
+/* Cyber Button Styling */
+button, .file-action {
+  font-family: 'Share Tech Mono', monospace;
+  background: rgba(0, 255, 204, 0.08);
+  border: 1px solid var(--border-glow);
+  color: var(--primary-glow);
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
 }
 
-.terminal-btn:hover:not(:disabled) {
-    background-color: var(--text-main);
-    color: var(--bg-main);
-}
-
-.terminal-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.btn-secondary {
-    width: auto;
-    padding: 6px 16px;
-    border-color: var(--text-muted);
-    color: var(--text-muted);
-}
-
-.btn-secondary:hover:not(:disabled) {
-    background-color: var(--danger);
-    color: white;
-    border-color: var(--danger);
-    box-shadow: 0 0 10px rgba(255, 51, 51, 0.5);
-}
-
-.btn-sm {
-    padding: 8px 12px;
-    font-size: 0.85rem;
-    width: auto;
-}
-
-/* =========================================
-   STATUS & LOADER
-   ========================================= */
-.status-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    margin-top: 1.2rem;
-    min-height: 40px;
-}
-
-.error-msg {
-    color: var(--text-main);
-    font-size: 0.9rem;
-    letter-spacing: 0.5px;
-    word-break: break-word;
-}
-
-.spinner {
-    width: 24px;
-    height: 24px;
-    border: 3px solid var(--bg-input);
-    border-top: 3px solid var(--text-main);
-    border-radius: 50%;
-    animation: spin 0.6s linear infinite;
-    margin-bottom: 8px;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* =========================================
-   DASHBOARD & HEADER
-   ========================================= */
-.dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px dashed var(--border-color);
-    padding-bottom: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-#user-display-name {
-    font-size: 1.2rem;
-    margin-bottom: 4px;
-}
-
-.badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border: 1px solid var(--text-muted);
-    font-size: 0.75rem;
-    color: var(--text-muted);
-}
-
-/* =========================================
-   ADMIN SECTION & UPLOAD ZONE
-   ========================================= */
-.admin-section, .upload-zone {
-    border: 1px dashed var(--border-color);
-    padding: 1.2rem;
-    margin-bottom: 1.5rem;
-    background: rgba(0, 255, 102, 0.02);
-}
-
-.section-desc {
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    margin-bottom: 10px;
-}
-
-.admin-form {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 120px auto;
-    gap: 10px;
-    margin-top: 10px;
-    margin-bottom: 1rem;
-}
-
-.control-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--bg-input);
-    padding: 10px 14px;
-    border-radius: 2px;
-    margin-bottom: 8px;
-    border: 1px solid var(--border-color);
-}
-
-.user-meta {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    display: block;
-}
-
-/* Upload input controls */
-.upload-container-block {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-top: 12px;
-}
-
-.upload-container-block input[type="file"] {
-    background: var(--bg-input);
-    padding: 10px;
-    border: 1px dashed var(--text-muted);
-    cursor: pointer;
-    color: var(--text-muted);
-}
-
-.upload-container-block input[type="file"]::file-selector-button {
-    background-color: transparent;
-    color: var(--text-main);
-    border: 1px solid var(--text-main);
-    padding: 4px 10px;
-    cursor: pointer;
-    margin-right: 12px;
-    font-size: 0.85rem;
-    transition: all 0.2s;
-}
-
-.upload-container-block input[type="file"]::file-selector-button:hover {
-    background-color: var(--text-main);
-    color: var(--bg-main);
-}
-
-/* =========================================
-   FILES GRID & CARDS
-   ========================================= */
-.files-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.file-card {
-    border: 1px solid var(--border-color);
-    background: var(--bg-input);
-    padding: 1rem;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.file-card:hover {
-    border-color: var(--text-main);
-    box-shadow: var(--glow);
-}
-
-.file-icon {
-    font-size: 2rem;
-    display: block;
-    margin-bottom: 8px;
-}
-
-.file-card h4 {
-    font-size: 0.9rem;
-    margin-bottom: 6px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.file-meta-info {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    margin-bottom: 12px;
-}
-
-.file-actions-row {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-}
-
-.file-action {
-    font-size: 0.8rem;
-    padding: 4px 8px;
-    border: 1px solid var(--text-main);
-    background-color: transparent;
-    color: var(--text-main);
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.file-action:hover {
-    background-color: var(--text-main);
-    color: var(--bg-main);
-}
-
-.file-action.delete {
-    border-color: var(--danger);
-    color: var(--danger);
-}
-
-.file-action.delete:hover {
-    background-color: var(--danger);
-    color: white;
-    box-shadow: 0 0 8px rgba(255, 51, 51, 0.6);
-}
-
-/* =========================================
-   MOBILE RESPONSIVENESS
-   ========================================= */
-@media (max-width: 768px) {
-    .admin-form {
-        grid-template-columns: 1fr;
-    }
-
-    .dashboard-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-    }
-
-    #logout-btn {
-        width: 100%;
-    }
+button:hover, .file-action:hover {
+  background: rgba(0, 255, 204, 0.2);
+  border-color: var(--primary-glow);
+  box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
 }
