@@ -8,115 +8,7 @@ let currentUser = null;
 let userRole = null;
 
 // =========================================================
-// WEB AUDIO API SOUND SYNTHESIZER
-// =========================================================
-const AudioFX = {
-    ctx: null,
-
-    init() {
-        if (!this.ctx) {
-            const AudioCtx = window.AudioContext || window.webkitAudioContext;
-            this.ctx = new AudioCtx();
-        }
-        if (this.ctx.state === 'suspended') {
-            this.ctx.resume();
-        }
-    },
-
-    playKeyClick() {
-        try {
-            this.init();
-            const now = this.ctx.currentTime;
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(1200 + Math.random() * 500, now);
-            osc.frequency.exponentialRampToValueAtTime(150, now + 0.012);
-
-            gain.gain.setValueAtTime(0.08, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.012);
-
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-
-            osc.start(now);
-            osc.stop(now + 0.012);
-        } catch (e) {}
-    },
-
-    playDecipherTick() {
-        try {
-            this.init();
-            const now = this.ctx.currentTime;
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(800 + Math.random() * 800, now);
-
-            gain.gain.setValueAtTime(0.015, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.008);
-
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-
-            osc.start(now);
-            osc.stop(now + 0.008);
-        } catch (e) {}
-    },
-
-    playSuccess() {
-        try {
-            this.init();
-            const now = this.ctx.currentTime;
-            const freqs = [523.25, 659.25, 783.99, 1046.50];
-
-            freqs.forEach((freq, idx) => {
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(freq, now + idx * 0.07);
-
-                gain.gain.setValueAtTime(0, now + idx * 0.07);
-                gain.gain.linearRampToValueAtTime(0.12, now + idx * 0.07 + 0.01);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + 0.15);
-
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-
-                osc.start(now + idx * 0.07);
-                osc.stop(now + idx * 0.07 + 0.15);
-            });
-        } catch (e) {}
-    },
-
-    playError() {
-        try {
-            this.init();
-            const now = this.ctx.currentTime;
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(160, now);
-            osc.frequency.setValueAtTime(110, now + 0.1);
-
-            gain.gain.setValueAtTime(0.18, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-
-            osc.start(now);
-            osc.stop(now + 0.35);
-        } catch (e) {}
-    }
-};
-
-// =========================================================
-// TEXT DECIPHER ENGINE
+// TEXT DECIPHER ENGINE (VISUAL ONLY)
 // =========================================================
 const CIPHER_CHARS = '!@#$%^&*()_+-=[]{}|;:,.<>?/0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
@@ -135,8 +27,6 @@ function decipherText(element, finalText, speed = 25) {
                     return CIPHER_CHARS[Math.floor(Math.random() * CIPHER_CHARS.length)];
                 })
                 .join('');
-
-            AudioFX.playDecipherTick();
 
             if (iteration >= totalLength) {
                 clearInterval(timer);
@@ -208,15 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (loginScreen) animateContainerText(loginScreen);
 
-    // Mechanical key audio
-    document.addEventListener('keydown', (e) => {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
-            if (!['Control', 'Shift', 'Alt', 'Meta', 'CapsLock'].includes(e.key)) {
-                AudioFX.playKeyClick();
-            }
-        }
-    });
-
     // Login Handler
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
@@ -237,8 +118,6 @@ document.addEventListener('DOMContentLoaded', () => {
             loginBtn.disabled = false;
 
             if (response && response.success) {
-                AudioFX.playSuccess();
-
                 currentUser = response.user.username;
                 userRole = response.user.role || 'viewer';
 
@@ -261,7 +140,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 await animateContainerText(dashboardScreen);
                 fetchFiles();
             } else {
-                AudioFX.playError();
                 await decipherText(errorMsg, `> ACCESS DENIED: ${response.message || 'INVALID PASSKEY'}`, 15);
             }
         });
@@ -270,7 +148,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Logout Handler
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
-            AudioFX.playError();
             currentUser = null;
             userRole = null;
             if (dashboardScreen) dashboardScreen.classList.add('hidden');
@@ -312,10 +189,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 fileChooser.value = '';
 
                 if (res && res.success) {
-                    AudioFX.playSuccess();
                     fetchFiles();
                 } else {
-                    AudioFX.playError();
                     alert('Upload failed: ' + (res.message || 'Unknown error'));
                 }
             };
@@ -343,11 +218,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (res && res.success) {
-                AudioFX.playSuccess();
                 createUserForm.reset();
                 fetchUsers();
             } else {
-                AudioFX.playError();
                 alert('Failed to register user: ' + (res.message || 'Server error'));
             }
         });
@@ -415,10 +288,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (res && res.success) {
-            AudioFX.playSuccess();
             fetchFiles();
         } else {
-            AudioFX.playError();
             alert('Purge failed: ' + (res.message || 'Error executing request'));
         }
     }
@@ -480,5 +351,4 @@ function escapeHtml(str) {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
-    }
-        
+}
