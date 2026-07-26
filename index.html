@@ -1,101 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yug Patel</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CYBER-VAULT // CLOUD TERMINAL</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body class="terminal-body">
-    <!-- CRT Overlay Lines for authentic Hacker Monitor look -->
-    <div class="scanline-overlay"></div>
+<body>
 
-    <div class="container">
-        <!-- LOGIN SCREEN -->
-        <div id="login-screen" class="card terminal-card">
-            <div class="terminal-header-bar">
-                <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-                <span class="terminal-title">Yug - AUTHENTICATION_PROMPT</span>
-            </div>
+  <!-- =========================================================
+       1. AUTHENTICATION / LOGIN SCREEN
+       ========================================================= -->
+  <div id="login-screen">
+    <div class="login-container">
+      <h2>&gt; TERMINAL ACCESS CONTROL</h2>
+      <p class="section-desc">&gt; ENTER ENCRYPTED CLEARANCE PASSKEY</p>
 
-            <div id="greeting-box">
-                <span class="prompt-symbol">C:\SYSTEM&gt;</span>
-                <h2 id="greeting-text" class="type-target">SYSTEM ACCESS</h2>
-            </div>
-            <p class="subtitle type-target">Enter security passkey to decrypt workspace...</p>
-            
-            <form id="login-form" autocomplete="off">
-                <div class="input-group">
-                    <label class="prompt-label">USER_ID&gt;</label>
-                    <input type="text" id="email-input" name="username" placeholder="enter_username" autocomplete="username" required>
-                </div>
-                <div class="input-group">
-                    <label class="prompt-label">PASSKEY&gt;</label>
-                    <input type="password" id="password-input" name="password" placeholder="••••••••" autocomplete="current-password" required>
-                </div>
-
-                <button type="submit" id="login-btn" class="btn terminal-btn">&gt; EXECUTE LOGIN</button>
-                
-                <!-- Status area for Verifying typewriter & Spinner -->
-                <div class="status-container">
-                    <div id="greeting-spinner" class="spinner hidden"></div>
-                    <p id="error-msg" class="error-msg"></p>
-                </div>
-            </form>
+      <form id="login-form">
+        <div class="input-group">
+          <label for="passkey-input">&gt; SECURITY PASSKEY</label>
+          <input 
+            type="password" 
+            id="passkey-input" 
+            placeholder="e.g. KEY-8821-CYBER" 
+            autocomplete="off" 
+            required 
+          />
         </div>
 
-        <!-- DASHBOARD SCREEN -->
-        <div id="dashboard-screen" class="card terminal-card hidden">
-            <div class="terminal-header-bar">
-                <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-                <span class="terminal-title">C:\USERS\DASHBOARD.EXE</span>
-            </div>
+        <button type="submit" id="login-btn">
+          [ AUTHENTICATE ] <span id="greeting-spinner" class="hidden"></span>
+        </button>
+      </form>
 
-            <div class="dashboard-header">
-                <div>
-                    <span class="prompt-symbol">ROOT@LOCAL:~#</span>
-                    <h2 id="user-display-name" class="type-target">Storage Dashboard</h2>
-                    <span id="user-role-badge" class="badge type-target">Role</span>
-                </div>
-                <button id="logout-btn" class="btn btn-secondary terminal-btn">[ LOGOUT ]</button>
-            </div>
-
-            <!-- ADMIN CONTROL PANEL -->
-            <div id="admin-section" class="admin-section hidden">
-                <h3 class="type-target">&gt; USER & ROLE MANAGEMENT</h3>
-                <p class="section-desc type-target">Directory Access Controls</p>
-                
-                <form id="create-user-form" class="admin-form" autocomplete="off">
-                    <input type="text" id="new-username" placeholder="Username" required>
-                    <input type="text" id="new-email" placeholder="Email (optional)">
-                    <input type="password" id="new-password" placeholder="Password" required>
-                    <select id="new-role">
-                        <option value="owner">Co-Owner</option>
-                        <option value="viewer" selected>Viewer</option>
-                    </select>
-                    <button type="submit" class="btn btn-sm terminal-btn">+ ADD USER</button>
-                </form>
-                
-                <div id="user-list-container" class="control-grid"></div>
-            </div>
-
-            <!-- UPLOAD SECTION -->
-            <div id="upload-section" class="upload-zone">
-                <h3 class="type-target">&gt; UPLOAD ENCRYPTED DOCUMENT</h3>
-                <div class="upload-container-block">
-                    <input type="file" id="file-chooser">
-                    <button id="upload-btn" class="btn terminal-btn">UPLOAD TO CLOUD 📤</button>
-                </div>
-            </div>
-
-            <!-- FILES LIST SECTION -->
-            <div class="files-section">
-                <h3 class="type-target">&gt; DECRYPTED CLOUD DOCUMENTS</h3>
-                <div id="files-grid" class="files-grid"></div>
-            </div>
-        </div>
+      <div id="error-msg"></div>
     </div>
+  </div>
 
-    <script type="module" src="script.js"></script>
+  <!-- =========================================================
+       2. MAIN DASHBOARD SCREEN
+       ========================================================= -->
+  <div id="dashboard-screen" class="hidden">
+    
+    <!-- Header Zone -->
+    <header class="dashboard-header">
+      <div class="user-info">
+        <span class="status-indicator"></span>
+        <span id="user-display-name" class="user-display-name">OPERATOR: UNKNOWN</span>
+        <span id="user-role-badge" class="badge">VIEWER</span>
+      </div>
+      <button id="logout-btn">[ TERMINATE SESSION ]</button>
+    </header>
+
+    <!-- File Upload Panel -->
+    <section class="dashboard-card">
+      <h3>&gt; TRANSMIT DOCUMENT TO CLOUD</h3>
+      <div class="upload-controls">
+        <input type="file" id="file-chooser" />
+        <button id="upload-btn">UPLOAD TO CLOUD 📤</button>
+      </div>
+    </section>
+
+    <!-- Repository Grid -->
+    <section class="dashboard-card">
+      <h3>&gt; CLOUD REPOSITORY FILES</h3>
+      <div id="files-grid">
+        <p class="type-target">&gt; SCANNING CLOUD REPOSITORY...</p>
+      </div>
+    </section>
+
+    <!-- Admin Panel (Visible to Owner/Admin only) -->
+    <section id="admin-section" class="admin-section hidden">
+      <h3>&gt; ACCESS MANAGEMENT &amp; PROVISIONING</h3>
+      
+      <form id="create-user-form">
+        <div class="admin-form-grid">
+          <input type="text" id="new-username" placeholder="Operator Name" required />
+          <input type="email" id="new-email" placeholder="Operator Email" required />
+          <select id="new-role">
+            <option value="viewer">VIEWER</option>
+            <option value="owner">ADMIN / OWNER</option>
+          </select>
+          <input type="text" id="new-passkey" placeholder="Custom Passkey (Optional)" />
+        </div>
+        <button type="submit" style="margin-top: 15px;">[ PROVISION OPERATOR ]</button>
+      </form>
+
+      <h4 style="margin-top: 25px;">&gt; ACTIVE DIRECTORY LIST</h4>
+      <div id="user-list-container"></div>
+    </section>
+
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
