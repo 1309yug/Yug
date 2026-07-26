@@ -2,7 +2,7 @@
 // CONFIGURATION & GLOBAL STATE
 // =========================================================
 // Replace this placeholder with your published Apps Script Web App URL ending in /exec
-const GOOGLE_DRIVE_BRIDGE_URL = "https://script.google.com/macros/s/AKfycbz62G2PnAn3kHi-YZncvPh-iBCykKByV4gaRddoTQNrxJ7diPkFCrY35--dEtpnjRiD5Q/exec";
+const GOOGLE_DRIVE_BRIDGE_URL = "YOUR_DEPLOYED_WEB_APP_URL";
 
 let currentUser = null;
 let userRole = null;
@@ -67,7 +67,7 @@ async function apiCall(payload) {
         return await response.json();
     } catch (err) {
         console.error("API Error:", err);
-        return { success: false, message: "Network connection lost or server unreachable." };
+        return { success: false, message: "SYSTEM OFFLINE: CONNECTION REFUSED" };
     }
 }
 
@@ -76,8 +76,7 @@ async function apiCall(payload) {
 // =========================================================
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('login-form');
-    const emailInput = document.getElementById('email-input');
-    const passwordInput = document.getElementById('password-input');
+    const passkeyInput = document.getElementById('passkey-input');
     const loginBtn = document.getElementById('login-btn');
     const spinner = document.getElementById('greeting-spinner');
     const errorMsg = document.getElementById('error-msg');
@@ -98,21 +97,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (loginScreen) animateContainerText(loginScreen);
 
-    // Login Handler
+    // Single-Input Passkey Login Handler
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const username = emailInput.value.trim();
-            const password = passwordInput.value.trim();
-
-            if (!username || !password) return;
+            const passkey = passkeyInput ? passkeyInput.value.trim() : '';
+            if (!passkey) return;
 
             loginBtn.disabled = true;
-            await decipherText(errorMsg, '> VERIFYING ENCRYPTED CREDENTIALS...', 20);
+            await decipherText(errorMsg, '> VERIFYING ENCRYPTED PASSKEY...', 18);
             if (spinner) spinner.classList.remove('hidden');
 
-            const response = await apiCall({ action: 'login', username, password });
+            const response = await apiCall({ action: 'login', passkey });
 
             if (spinner) spinner.classList.add('hidden');
             loginBtn.disabled = false;
@@ -125,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (userRoleBadge) userRoleBadge.textContent = userRole.toUpperCase();
 
                 if (adminSection) {
-                    if (userRole === 'primary_owner' || userRole === 'owner') {
+                    if (['primary_owner', 'owner', 'admin'].includes(userRole.toLowerCase())) {
                         adminSection.classList.remove('hidden');
                         fetchUsers();
                     } else {
@@ -140,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 await animateContainerText(dashboardScreen);
                 fetchFiles();
             } else {
-                await decipherText(errorMsg, `> ACCESS DENIED: ${response.message || 'INVALID PASSKEY'}`, 15);
+                await decipherText(errorMsg, `> ${response.message || 'ACCESS DENIED: INVALID PASSKEY'}`, 15);
             }
         });
     }
@@ -158,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Upload Handler
+    // File Upload Handler
     if (uploadBtn && fileChooser) {
         uploadBtn.addEventListener('click', async () => {
             const file = fileChooser.files[0];
@@ -168,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             uploadBtn.disabled = true;
-            uploadBtn.textContent = 'ENCRYPTING & TRANSMITTING...';
+            uploadBtn.textContent = 'TRANSMITTING...';
 
             const reader = new FileReader();
             reader.onload = async (e) => {
@@ -199,34 +196,35 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Create User Handler
+    // Provision Operator Handler
     if (createUserForm) {
         createUserForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const username = document.getElementById('new-username').value.trim();
             const email = document.getElementById('new-email').value.trim();
-            const password = document.getElementById('new-password').value.trim();
             const role = document.getElementById('new-role').value;
+            const customPasskey = document.getElementById('new-passkey')?.value.trim() || '';
 
             const res = await apiCall({
                 action: 'createUser',
                 username,
                 email,
-                password,
-                role
+                role,
+                passkey: customPasskey
             });
 
             if (res && res.success) {
+                alert(`OPERATOR PROVISIONED!\nASSIGNED PASSKEY: ${res.passkey}`);
                 createUserForm.reset();
                 fetchUsers();
             } else {
-                alert('Failed to register user: ' + (res.message || 'Server error'));
+                alert('Failed to provision operator: ' + (res.message || 'Server error'));
             }
         });
     }
 
-    // Data Fetchers
+    // Data Fetchers & Renderers
     async function fetchFiles() {
         if (!filesGrid) return;
         filesGrid.innerHTML = '<p class="type-target">&gt; SCANNING CLOUD REPOSITORY...</p>';
@@ -258,10 +256,10 @@ document.addEventListener('DOMContentLoaded', () => {
             card.innerHTML = `
                 <span class="file-icon">${icon}</span>
                 <h4 title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</h4>
-                <p class="file-meta-info">${sizeStr} | BY: ${escapeHtml(file.uploadedBy || 'UNKNOWN')}</p>
+                <p class="file-meta-info">${sizeStr} | BY: ${escapeHtml(file.uploadedBy || 'SYSTEM')}</p>
                 <div class="file-actions-row">
                     <a href="${file.url}" target="_blank" class="file-action">[ ACCESS ]</a>
-                    <button class="file-action delete" data-id="${file.id || ''}" data-url="${file.url}">[ PURGE ]</button>
+                    <button class="file-action delete" data-id="${file.id || ''}">[ PURGE ]</button>
                 </div>
             `;
 
@@ -272,20 +270,16 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             const deleteBtn = card.querySelector('.delete');
-            deleteBtn.addEventListener('click', () => handleDeleteFile(file.id, file.url));
+            deleteBtn.addEventListener('click', () => handleDeleteFile(file.id));
 
             filesGrid.appendChild(card);
         });
     }
 
-    async function handleDeleteFile(fileId, fileUrl) {
+    async function handleDeleteFile(fileId) {
         if (!confirm('Permanently purge this record from memory?')) return;
 
-        const res = await apiCall({
-            action: 'delete',
-            fileId: fileId,
-            targetUrl: fileUrl
-        });
+        const res = await apiCall({ action: 'delete', fileId: fileId });
 
         if (res && res.success) {
             fetchFiles();
@@ -296,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchUsers() {
         if (!userListContainer) return;
-        userListContainer.innerHTML = '<p class="type-target">&gt; READING DIRECTORY ACCESS LIST...</p>';
+        userListContainer.innerHTML = '<p class="type-target">&gt; READING ACCESS DIRECTORY...</p>';
         const res = await apiCall({ action: 'getUsers' });
 
         if (res && res.success && Array.isArray(res.users)) {
@@ -314,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
             div.innerHTML = `
                 <div>
                     <strong>${escapeHtml(u.username)}</strong>
-                    <span class="user-meta">${escapeHtml(u.email || 'No Email')} | ROLE: ${u.role}</span>
+                    <span class="user-meta">KEY: ${escapeHtml(u.passkey)} | ROLE: ${u.role}</span>
                 </div>
                 <span class="badge">${u.status || 'active'}</span>
             `;
@@ -323,9 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// =========================================================
-// UTILITIES
-// =========================================================
+// Utilities
 function getFileIcon(filename, mimeType) {
     const ext = (filename || '').split('.').pop().toLowerCase();
     if (mimeType?.includes('image') || ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext)) return '🖼️';
