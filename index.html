@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0"/>
   <title>CYBER-VAULT // CLOUD TERMINAL</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -46,10 +46,12 @@
     <header class="dashboard-header">
       <div class="user-info">
         <span class="status-indicator"></span>
-        <span id="user-display-name" class="user-display-name">OPERATOR: UNKNOWN</span>
-        <span id="user-role-badge" class="badge">VIEWER</span>
+        <div class="user-text-wrapper">
+          <span id="user-display-name" class="user-display-name">OPERATOR: UNKNOWN</span>
+          <span id="user-role-badge" class="badge">VIEWER</span>
+        </div>
       </div>
-      <button id="logout-btn">[ TERMINATE SESSION ]</button>
+      <button id="logout-btn" class="btn-secondary">[ TERMINATE SESSION ]</button>
     </header>
 
     <!-- File Upload Panel -->
@@ -57,7 +59,7 @@
       <h3>&gt; TRANSMIT DOCUMENT TO CLOUD</h3>
       <div class="upload-controls">
         <input type="file" id="file-chooser" />
-        <button id="upload-btn">UPLOAD TO CLOUD 📤</button>
+        <button id="upload-btn" class="btn-primary">UPLOAD TO CLOUD 📤</button>
       </div>
     </section>
 
@@ -69,7 +71,7 @@
       </div>
     </section>
 
-    <!-- Admin Panel (Visible to Owner/Admin only) -->
+    <!-- Admin Panel -->
     <section id="admin-section" class="admin-section hidden">
       <h3>&gt; ACCESS MANAGEMENT &amp; PROVISIONING</h3>
       
@@ -83,10 +85,10 @@
           </select>
           <input type="text" id="new-passkey" placeholder="Custom Passkey (Optional)" />
         </div>
-        <button type="submit" style="margin-top: 15px;">[ PROVISION OPERATOR ]</button>
+        <button type="submit" class="btn-primary admin-submit-btn">[ PROVISION OPERATOR ]</button>
       </form>
 
-      <h4 style="margin-top: 25px;">&gt; ACTIVE DIRECTORY LIST</h4>
+      <h4 class="admin-subtitle">&gt; ACTIVE DIRECTORY LIST</h4>
       <div id="user-list-container"></div>
     </section>
 
