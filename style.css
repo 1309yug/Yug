@@ -8,20 +8,27 @@
   --primary-glow-dim: rgba(0, 255, 204, 0.15);
   --border-glow: rgba(0, 255, 204, 0.25);
   --bg-dark: #050811;
-  --card-bg: rgba(10, 15, 25, 0.78);
-  --input-bg: rgba(5, 10, 20, 0.85);
+  --card-bg: rgba(10, 15, 25, 0.85);
+  --input-bg: rgba(5, 10, 20, 0.9);
   --danger-color: #ff3366;
   --danger-glow: rgba(255, 51, 102, 0.3);
   --amber-alert: #ffaa00;
 }
 
 /* =========================================================
-   2. GLOBAL RESET & RADIAL GRID BACKGROUND
+   2. GLOBAL RESET & TOUCH-FRIENDLY BASE
    ========================================================= */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
 body {
@@ -31,25 +38,27 @@ body {
     radial-gradient(circle at 50% 30%, rgba(0, 255, 204, 0.08) 0%, transparent 65%),
     linear-gradient(rgba(0, 255, 204, 0.04) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0, 255, 204, 0.04) 1px, transparent 1px);
-  background-size: 100% 100%, 30px 30px, 30px 30px;
+  background-size: 100% 100%, 25px 25px, 25px 25px;
   background-position: center, center, center;
   background-attachment: fixed;
   color: var(--primary-glow);
   letter-spacing: 0.05em;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
 /* =========================================================
-   3. TYPOGRAPHY & HEADERS
+   3. TYPOGRAPHY & UTILITIES
    ========================================================= */
-h1, h2, h3, h4, 
-.user-display-name {
+h1, h2, h3, h4, .user-display-name {
   text-shadow: 0 0 8px rgba(0, 255, 204, 0.5);
   text-transform: uppercase;
-  margin-bottom: 10px;
+  word-break: break-word;
 }
+
+h2 { font-size: 1.35rem; }
+h3 { font-size: 1.1rem; margin-bottom: 12px; }
+h4 { font-size: 0.95rem; }
 
 p, label, span {
   color: var(--primary-glow);
@@ -59,9 +68,7 @@ p, label, span {
   display: none !important;
 }
 
-/* =========================================================
-   4. CUSTOM DARK SCROLLBARS
-   ========================================================= */
+/* Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -73,37 +80,33 @@ p, label, span {
   background: rgba(0, 255, 204, 0.3);
   border-radius: 3px;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: var(--primary-glow);
-  box-shadow: 0 0 10px var(--primary-glow);
-}
 
 /* =========================================================
-   5. AUTHENTICATION / LOGIN CONTAINER
+   4. LOGIN SCREEN (RESPONSIVE)
    ========================================================= */
 #login-screen {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  padding: 20px;
+  padding: 16px;
+  width: 100%;
 }
 
 .login-container {
   position: relative;
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
   background: var(--card-bg);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid var(--border-glow);
   border-radius: 8px;
-  padding: 35px 30px;
+  padding: 28px 20px;
   box-shadow: 0 0 25px var(--primary-glow-dim);
   overflow: hidden;
 }
 
-/* Animated Top Scanner Line */
 .login-container::after {
   content: '';
   position: absolute;
@@ -123,14 +126,14 @@ p, label, span {
 #login-form {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  margin-top: 20px;
+  gap: 16px;
+  margin-top: 18px;
 }
 
 .input-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .input-group label {
@@ -139,11 +142,12 @@ p, label, span {
 }
 
 #error-msg {
-  margin-top: 15px;
+  margin-top: 14px;
   min-height: 24px;
   font-size: 0.85rem;
   color: var(--amber-alert);
   text-shadow: 0 0 6px rgba(255, 170, 0, 0.4);
+  word-break: break-word;
 }
 
 #greeting-spinner {
@@ -162,16 +166,16 @@ p, label, span {
 }
 
 /* =========================================================
-   6. DASHBOARD & CARDS
+   5. DASHBOARD LAYOUT & CARDS
    ========================================================= */
 #dashboard-screen {
-  padding: 30px;
+  padding: 24px 16px;
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 25px;
+  gap: 20px;
 }
 
 .dashboard-header,
@@ -181,15 +185,18 @@ p, label, span {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border-glow);
-  padding: 22px;
+  padding: 20px;
   border-radius: 6px;
   box-shadow: 0 0 15px var(--primary-glow-dim);
 }
 
+/* Responsive Header */
 .dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .user-info {
@@ -198,10 +205,18 @@ p, label, span {
   gap: 12px;
 }
 
+.user-text-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .status-indicator {
   display: inline-block;
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
+  min-width: 10px;
   background-color: var(--primary-glow);
   border-radius: 50%;
   box-shadow: 0 0 10px var(--primary-glow);
@@ -217,20 +232,21 @@ p, label, span {
 .badge {
   background: rgba(0, 255, 204, 0.12);
   border: 1px solid var(--border-glow);
-  padding: 3px 10px;
+  padding: 3px 8px;
   border-radius: 4px;
   font-size: 0.75rem;
 }
 
-/* Upload Row */
+/* Responsive Upload Row */
 .upload-controls {
   display: flex;
-  gap: 15px;
+  flex-direction: row;
+  gap: 12px;
   margin-top: 10px;
 }
 
 /* =========================================================
-   7. INPUTS & BUTTONS
+   6. INPUTS & BUTTONS (TOUCH-OPTIMIZED)
    ========================================================= */
 input[type="text"],
 input[type="email"],
@@ -241,10 +257,12 @@ select {
   border: 1px solid var(--border-glow) !important;
   color: var(--primary-glow) !important;
   font-family: 'Share Tech Mono', monospace;
-  padding: 10px 14px;
+  padding: 12px 14px;
+  min-height: 44px; /* Touch Target Requirement */
   border-radius: 4px;
   outline: none;
   width: 100%;
+  font-size: 0.9rem;
   transition: all 0.2s ease;
 }
 
@@ -258,7 +276,8 @@ button, .file-action {
   background: rgba(0, 255, 204, 0.08);
   border: 1px solid var(--border-glow);
   color: var(--primary-glow);
-  padding: 10px 18px;
+  padding: 12px 18px;
+  min-height: 44px; /* Touch Target Requirement */
   border-radius: 4px;
   cursor: pointer;
   text-transform: uppercase;
@@ -267,23 +286,24 @@ button, .file-action {
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  font-size: 0.85rem;
   white-space: nowrap;
 }
 
-button:hover, .file-action:hover {
+button:hover, .file-action:hover, button:active {
   background: rgba(0, 255, 204, 0.22);
   border-color: var(--primary-glow);
   box-shadow: 0 0 12px rgba(0, 255, 204, 0.3);
 }
 
 /* =========================================================
-   8. REPOSITORY GRID & SHIMMER CARDS
+   7. REPOSITORY GRID & CARDS
    ========================================================= */
 #files-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 18px;
-  margin-top: 15px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 10px;
 }
 
 .file-card {
@@ -292,15 +312,14 @@ button:hover, .file-action:hover {
   backdrop-filter: blur(12px);
   border: 1px solid var(--border-glow);
   border-radius: 6px;
-  padding: 18px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s ease;
 }
 
-/* Card Light Sweep Shimmer */
 .file-card::before {
   content: '';
   position: absolute;
@@ -319,12 +338,18 @@ button:hover, .file-action:hover {
 
 .file-card:hover {
   border-color: rgba(0, 255, 204, 0.7);
-  box-shadow: 0 0 20px rgba(0, 255, 204, 0.25);
+  box-shadow: 0 0 18px rgba(0, 255, 204, 0.2);
   transform: translateY(-2px);
 }
 
 .file-icon {
   font-size: 1.8rem;
+}
+
+.file-card h4 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .file-meta-info {
@@ -333,9 +358,10 @@ button:hover, .file-action:hover {
 }
 
 .file-actions-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
-  margin-top: 5px;
+  margin-top: 6px;
 }
 
 .file-action.delete {
@@ -353,24 +379,98 @@ button:hover, .file-action:hover {
 /* Admin Grid Layout */
 .admin-form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 12px;
   margin-top: 10px;
+}
+
+.admin-submit-btn {
+  margin-top: 14px;
+  width: 100%;
+}
+
+.admin-subtitle {
+  margin-top: 24px;
+  margin-bottom: 10px;
 }
 
 .control-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 14px;
-  background: rgba(5, 10, 20, 0.5);
+  padding: 12px 14px;
+  background: rgba(5, 10, 20, 0.6);
   border: 1px solid var(--border-glow);
   border-radius: 4px;
   margin-top: 8px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .user-meta {
   display: block;
   font-size: 0.75rem;
   opacity: 0.7;
+  margin-top: 4px;
+}
+
+/* =========================================================
+   8. MEDIA QUERIES FOR LAPTOP & MOBILE
+   ========================================================= */
+
+/* Tablet / Mobile (Below 768px) */
+@media (max-width: 768px) {
+  #dashboard-screen {
+    padding: 16px 12px;
+    gap: 16px;
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dashboard-header button {
+    width: 100%;
+  }
+
+  .upload-controls {
+    flex-direction: column;
+  }
+
+  .upload-controls button {
+    width: 100%;
+  }
+
+  .admin-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Small Mobile Phones (Below 480px) */
+@media (max-width: 480px) {
+  .login-container {
+    padding: 22px 16px;
+  }
+
+  h2 {
+    font-size: 1.15rem;
+  }
+
+  h3 {
+    font-size: 1rem;
+  }
+
+  #files-grid {
+    grid-template-columns: 1fr; /* Single column files on small phones */
+  }
+
+  .control-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .file-actions-row {
+    grid-template-columns: 1fr; /* Stack Action and Purge buttons */
+  }
 }
