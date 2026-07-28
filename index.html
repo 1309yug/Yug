@@ -93,6 +93,39 @@
     </section>
 
   </div>
+  <!-- Inside #dashboard-screen -> Section: TRANSMIT DOCUMENT TO CLOUD -->
+<section class="dashboard-card">
+  <h3>&gt; TRANSMIT DOCUMENT TO CLOUD</h3>
+  <div class="upload-controls">
+    <input type="file" id="file-chooser" />
+    <input 
+      type="password" 
+      id="upload-passphrase" 
+      placeholder="🔑 Encryption Key / Passphrase" 
+      autocomplete="off" 
+      required 
+    />
+    <button id="upload-btn" class="btn-primary">ENCRYPT &amp; UPLOAD 🔒</button>
+  </div>
+</section>
+
+<!-- Add this Decryption Modal right before </body> -->
+<div id="decrypt-modal" class="hidden">
+  <div class="login-container">
+    <h3>&gt; DECRYPT ENCRYPTED FILE</h3>
+    <p class="section-desc" id="decrypt-filename">&gt; ENTER PASSPHRASE TO UNLOCK</p>
+    <div class="input-group" style="margin-top: 15px;">
+      <label for="decrypt-passphrase">&gt; ENCRYPTION PASSPHRASE</label>
+      <input type="password" id="decrypt-passphrase" placeholder="Enter key used during upload" autocomplete="off" />
+    </div>
+    <div style="display: flex; gap: 10px; margin-top: 20px;">
+      <button id="confirm-decrypt-btn" class="btn-primary" style="flex: 1;">[ DECRYPT ]</button>
+      <button id="cancel-decrypt-btn" class="btn-secondary" style="flex: 1;">[ CANCEL ]</button>
+    </div>
+    <div id="decrypt-error-msg" style="margin-top: 10px; color: var(--amber-alert); font-size: 0.85rem;"></div>
+  </div>
+</div>
+  
 
   <script src="script.js"></script>
 </body>
