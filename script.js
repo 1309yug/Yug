@@ -1,7 +1,7 @@
 // =========================================================
 // CONFIGURATION & GLOBAL STATE
 // =========================================================
-const GOOGLE_DRIVE_BRIDGE_URL = "YOUR_DEPLOYED_WEB_APP_URL";
+const GOOGLE_DRIVE_BRIDGE_URL = "https://script.google.com/macros/s/AKfycbzmhwfpDoLVEdDJHrzffIFZYtC6oaBr5aMGof6aPgk9gecuxSDPsd0vhEhr6D2SduUE/exec";
 
 let currentUser = null;
 let userRole = null;
