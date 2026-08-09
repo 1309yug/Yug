@@ -1,7 +1,7 @@
 // =========================================================
 // CONFIGURATION & GLOBAL STATE
 // =========================================================
-const GOOGLE_DRIVE_BRIDGE_URL = "https://script.google.com/macros/s/AKfycbxvTQGGSm6jW6PxiGet2MAoKFGozfUOJKewS41jw8tucRv7kcK6qxSAC2PLr6sVIdRbYg/exec";
+const GOOGLE_DRIVE_BRIDGE_URL = "YOUR_DEPLOYED_WEB_APP_URL";
 
 let currentUser = null;
 let userRole = null;
@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!passkey) return;
 
             loginBtn.disabled = true;
-            await decipherText(errorMsg, '> VERIFYING ENCRYPTED PASSKEY...', 18);
+            await decipherText(errorMsg, '> VERIFYING PASSKEY...', 18);
             if (spinner) spinner.classList.remove('hidden');
 
             const response = await apiCall({ action: 'login', passkey });
@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Encrypted Upload Handler
+    // Flexible Upload Handler (Optional Encryption)
     if (uploadBtn && fileChooser) {
         uploadBtn.addEventListener('click', async () => {
             const file = fileChooser.files[0];
@@ -250,34 +250,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            if (!passphrase) {
-                alert('Please enter an Encryption Passphrase to secure this file.');
-                return;
-            }
-
             uploadBtn.disabled = true;
-            uploadBtn.textContent = 'ENCRYPTING (AES-256)... 🔒';
 
             try {
                 const fileArrayBuffer = await file.arrayBuffer();
+                let base64Data = "";
+                let targetFilename = file.name;
 
-                const encryptedBytes = await encryptFileBuffer(fileArrayBuffer, passphrase);
-                const base64EncryptedData = uint8ToBase64(encryptedBytes);
+                if (passphrase) {
+                    // Encryption requested
+                    uploadBtn.textContent = 'ENCRYPTING (AES-256)... 🔒';
+                    const encryptedBytes = await encryptFileBuffer(fileArrayBuffer, passphrase);
+                    base64Data = uint8ToBase64(encryptedBytes);
+                    targetFilename = `${file.name}.enc`;
+                } else {
+                    // Plain Upload requested
+                    uploadBtn.textContent = 'PREPARING FILE...';
+                    base64Data = uint8ToBase64(new Uint8Array(fileArrayBuffer));
+                }
 
                 uploadBtn.textContent = 'TRANSMITTING...';
 
                 const payload = {
                     action: 'upload',
-                    filename: `${file.name}.enc`,
-                    mimeType: 'application/octet-stream',
-                    fileData: base64EncryptedData,
-                    fileSize: encryptedBytes.byteLength,
+                    filename: targetFilename,
+                    mimeType: file.type || 'application/octet-stream',
+                    fileData: base64Data,
+                    fileSize: file.size,
                     uploadedBy: currentUser || 'Anonymous'
                 };
 
                 const res = await apiCall(payload);
                 uploadBtn.disabled = false;
-                uploadBtn.textContent = 'ENCRYPT & UPLOAD 🔒';
+                uploadBtn.textContent = 'UPLOAD FILE 🚀';
                 fileChooser.value = '';
                 if (uploadPassphraseInput) uploadPassphraseInput.value = '';
 
@@ -287,10 +292,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('Upload failed: ' + (res.message || 'Unknown error'));
                 }
             } catch (cryptoErr) {
-                console.error("Encryption Failure:", cryptoErr);
-                alert("CLIENT CRYPTO ERROR: Failed to encrypt file locally.");
+                console.error("Upload Failure:", cryptoErr);
+                alert("CLIENT ERROR: Failed to process file.");
                 uploadBtn.disabled = false;
-                uploadBtn.textContent = 'ENCRYPT & UPLOAD 🔒';
+                uploadBtn.textContent = 'UPLOAD FILE 🚀';
             }
         });
     }
@@ -359,6 +364,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const role = document.getElementById('new-role').value;
             const customPasskey = document.getElementById('new-passkey').value.trim();
 
+            if (customPasskey && customPasskey.length !== 8) {
+                alert('Password must be exactly 8 characters long.');
+                return;
+            }
+
             const res = await apiCall({
                 action: 'createUser',
                 username,
@@ -403,7 +413,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const card = document.createElement('div');
             card.className = 'file-card';
 
-            const icon = getFileIcon(file.name);
+            const isEncrypted = file.name.endsWith('.enc');
+            const icon = isEncrypted ? '🔐' : '📄';
+            const actionText = isEncrypted ? '[ DECRYPT ]' : '[ DOWNLOAD ]';
             const sizeStr = formatBytes(file.size);
 
             card.innerHTML = `
@@ -411,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h4 title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</h4>
                 <p class="file-meta-info">${sizeStr} | BY: ${escapeHtml(file.uploadedBy || 'SYSTEM')}</p>
                 <div class="file-actions-row">
-                    <button class="file-action decrypt-action">[ DECRYPT ]</button>
+                    <button class="file-action decrypt-action">${actionText}</button>
                     <button class="file-action delete" data-id="${file.id || ''}">[ PURGE ]</button>
                 </div>
             `;
@@ -422,13 +434,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 decipherText(titleEl, original, 15);
             });
 
-            const decryptBtn = card.querySelector('.decrypt-action');
-            decryptBtn.addEventListener('click', () => {
-                currentDecryptTarget = file;
-                if (decryptFilenameEl) decryptFilenameEl.textContent = `> DECRYPT: ${file.name}`;
-                if (decryptPassphraseInput) decryptPassphraseInput.value = '';
-                if (decryptErrorMsg) decryptErrorMsg.textContent = '';
-                if (decryptModal) decryptModal.classList.remove('hidden');
+            const actionBtn = card.querySelector('.decrypt-action');
+            actionBtn.addEventListener('click', () => {
+                if (isEncrypted) {
+                    currentDecryptTarget = file;
+                    if (decryptFilenameEl) decryptFilenameEl.textContent = `> DECRYPT: ${file.name}`;
+                    if (decryptPassphraseInput) decryptPassphraseInput.value = '';
+                    if (decryptErrorMsg) decryptErrorMsg.textContent = '';
+                    if (decryptModal) decryptModal.classList.remove('hidden');
+                } else {
+                    // Direct Download for unencrypted file
+                    const a = document.createElement('a');
+                    a.href = file.url;
+                    a.download = file.name;
+                    a.target = "_blank";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                }
             });
 
             const deleteBtn = card.querySelector('.delete');
@@ -470,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
             div.innerHTML = `
                 <div>
                     <strong>${escapeHtml(u.username)}</strong>
-                    <span class="user-meta">KEY: ${escapeHtml(u.passkey)} | ROLE: ${u.role}</span>
+                    <span class="user-meta">PASSKEY: ${escapeHtml(u.passkey)} | ROLE: ${u.role}</span>
                 </div>
                 <span class="badge">${u.status || 'active'}</span>
             `;
@@ -480,11 +503,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Helper Functions
-function getFileIcon(filename) {
-    if (filename.endsWith('.enc')) return '🔐';
-    return '📄';
-}
-
 function formatBytes(bytes) {
     if (!bytes || isNaN(bytes)) return 'UNKNOWN SIZE';
     const k = 1024;
@@ -499,4 +517,4 @@ function escapeHtml(str) {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
-        }
+}
