@@ -14,15 +14,16 @@
   <div id="login-screen">
     <div class="login-container">
       <h2>&gt; TERMINAL ACCESS CONTROL</h2>
-      <p class="section-desc">&gt; ENTER ENCRYPTED CLEARANCE PASSKEY</p>
+      <p class="section-desc">&gt; ENTER 8-CHARACTER CLEARANCE PASSWORD</p>
 
       <form id="login-form">
         <div class="input-group">
-          <label for="passkey-input">&gt; SECURITY PASSKEY</label>
+          <label for="passkey-input">&gt; SECURITY PASSKEY (8 CHARS)</label>
           <input 
             type="password" 
             id="passkey-input" 
-            placeholder="" 
+            placeholder="e.g. A8x9P2q1" 
+            maxlength="8"
             autocomplete="off" 
             required 
           />
@@ -62,11 +63,10 @@
         <input 
           type="password" 
           id="upload-passphrase" 
-          placeholder="🔑 Encryption Key / Passphrase" 
+          placeholder="🔑 Passphrase (Optional for Encryption)" 
           autocomplete="off" 
-          required 
         />
-        <button id="upload-btn" class="btn-primary">ENCRYPT &amp; UPLOAD 🔒</button>
+        <button id="upload-btn" class="btn-primary">UPLOAD FILE 🚀</button>
       </div>
     </section>
 
@@ -90,7 +90,7 @@
             <option value="viewer">VIEWER</option>
             <option value="owner">ADMIN / OWNER</option>
           </select>
-          <input type="text" id="new-passkey" placeholder="Custom Passkey (Optional)" />
+          <input type="text" id="new-passkey" placeholder="8-Char Password (Optional)" maxlength="8" />
         </div>
         <button type="submit" class="btn-primary admin-submit-btn">[ PROVISION OPERATOR ]</button>
       </form>
