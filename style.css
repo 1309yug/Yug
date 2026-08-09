@@ -16,13 +16,27 @@
 }
 
 /* =========================================================
-   2. GLOBAL RESET & TOUCH-FRIENDLY BASE
+   2. GLOBAL RESET & NO-TEXT-SELECTION RULE
    ========================================================= */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
+  
+  /* Disable Text Selection Globally */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Allow text input interaction for typing */
+input, select, textarea {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
 }
 
 html, body {
