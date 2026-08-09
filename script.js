@@ -1,7 +1,7 @@
 // =========================================================
 // CONFIGURATION & GLOBAL STATE
 // =========================================================
-const GOOGLE_DRIVE_BRIDGE_URL = "https://script.google.com/macros/s/AKfycbyQFJ9O17f-Ldievdl5wAx_-IEYlXqXSHdUMYc-NG9TktKwFH3wdzYIZOAHSaWqsHjw8g/exec";
+const GOOGLE_DRIVE_BRIDGE_URL = "https://script.google.com/macros/s/AKfycbwhCntxKKptxX3dlVBJUC4R_7TDvrtxQ4j3ipbEbI8xmf5qjfdL91Op2AQ4TKhvHPxRZA/exec";
 
 let currentUser = null;
 let userRole = null;
